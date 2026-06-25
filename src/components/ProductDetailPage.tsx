@@ -24,9 +24,6 @@ export default function ProductDetailPage({
   onSelectProduct,
   products
 }: ProductDetailPageProps) {
-  // Console log count for verification
-  console.log("ProductPage Products Count:", products.length);
-
   // Gallery states
   const [selectedImage, setSelectedImage] = useState(product.image);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });

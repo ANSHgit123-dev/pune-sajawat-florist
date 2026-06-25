@@ -465,7 +465,6 @@ export default function App() {
   };
 
   const deduplicatedProducts = mergeDuplicateProducts(loadedProducts);
-  console.log("Homepage Products Count:", loadedProducts.length);
 
   const categoryProductCounts = deduplicatedProducts.reduce((acc, p) => {
     if (p.isEnabled !== false && !p.isHidden) {

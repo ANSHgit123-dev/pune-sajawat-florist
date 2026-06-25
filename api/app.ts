@@ -22,7 +22,6 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
 // Supabase Configuration & Client Initialization
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-console.log("SERVICE ROLE KEY START:", supabaseServiceKey?.substring(0, 20));
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false }
 });
@@ -692,7 +691,6 @@ app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
 // API analyze uploaded image files using Gemini Vision AI
 app.post("/api/analyze-images", requireSessionWithCsrf, async (req, res) => {
   try {
-    console.log("=== API ANALYZE IMAGES REACHED ===");
     const { files } = req.body;
     if (!Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: "No files provided for analysis" });
@@ -777,7 +775,6 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
       let attempts = 3;
       while (attempts > 0) {
         try {
-          console.log(`Attempting analysis with model: ${modelName} (${attempts} attempts remaining)`);
           const response = await ai.models.generateContent({
             model: modelName,
             contents: contents,
