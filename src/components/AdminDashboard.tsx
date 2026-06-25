@@ -85,9 +85,13 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const handleRestoreBackup = async (index: number) => {
     if (!confirm(`Are you sure you want to restore the database to Backup #${index}? This will overwrite current products.`)) return;
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/restore", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ index })
       });
       const data = await res.json();
@@ -106,9 +110,13 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const handleRestoreDeletedProduct = async (id: string) => {
     if (!confirm("Are you sure you want to restore this deleted product back to the active catalog?")) return;
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/restore-deleted", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ id })
       });
       const data = await res.json();
@@ -553,30 +561,68 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   useEffect(() => {
     loadOrders();
-    // Check if previously logged in this session
-    const authStatus = sessionStorage.getItem("sajawat_admin_auth");
-    if (authStatus === "true") {
-      setIsAuthorized(true);
-    }
+    // Check session on server-side
+    const verifySession = async () => {
+      try {
+        const res = await fetch("/api/admin/check-session");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            setIsAuthorized(true);
+            sessionStorage.setItem("sajawat_admin_auth", "true");
+            sessionStorage.setItem("sajawat_csrf_token", data.csrfToken);
+            loadProducts();
+            loadDeletedProducts();
+          } else {
+            setIsAuthorized(false);
+            sessionStorage.removeItem("sajawat_admin_auth");
+            sessionStorage.removeItem("sajawat_csrf_token");
+          }
+        }
+      } catch (err) {
+        console.error("Session verification failed", err);
+      }
+    };
+    verifySession();
     // Load dynamic delivery settings
     setDeliverySettings(getDeliverySettings());
   }, []);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.trim() === "admin" || password.trim().toLowerCase() === "sajawat") {
-      setIsAuthorized(true);
-      setLoginError("");
-      sessionStorage.setItem("sajawat_admin_auth", "true");
-    } else {
-      setLoginError("Invalid secret security key. Hint: Try 'admin'");
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthorized(true);
+        setLoginError("");
+        sessionStorage.setItem("sajawat_admin_auth", "true");
+        sessionStorage.setItem("sajawat_csrf_token", data.csrfToken);
+        loadProducts();
+        loadDeletedProducts();
+      } else {
+        setLoginError(data.error || "Invalid credentials.");
+      }
+    } catch (err) {
+      console.error("Login request failed", err);
+      setLoginError("Login failed. Please check your network connection.");
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Logout request failed", e);
+    }
     setIsAuthorized(false);
     setPassword("");
     sessionStorage.removeItem("sajawat_admin_auth");
+    sessionStorage.removeItem("sajawat_csrf_token");
   };
 
   // Status updaters

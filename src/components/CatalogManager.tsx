@@ -155,9 +155,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   // Save CMS Settings Helper
   const saveCmsSettings = async (updatedSettings: CmsSettings) => {
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/cms", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updatedSettings)
       });
       if (res.ok) {
@@ -193,9 +197,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   const uploadImageToServer = async (file: File): Promise<string> => {
     try {
       const base64 = await fileToBase64(file);
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ name: file.name, base64 })
       });
       if (res.ok) {
@@ -492,9 +500,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
 
     // Save to server
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updatedProducts)
       });
       if (res.ok) {
@@ -512,9 +524,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product? This is permanent.")) return;
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ id: productId })
       });
       if (res.ok) {
@@ -549,9 +565,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
     if (!confirm(`Are you sure you want to delete ${selectedProductIds.length} products?`)) return;
     
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ ids: selectedProductIds })
       });
       if (res.ok) {
@@ -573,9 +593,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       selectedProductIds.includes(p.id) ? { ...p, category: bulkCategoryChange } : p
     );
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updated)
       });
       if (res.ok) {
@@ -603,9 +627,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       return p;
     });
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updated)
       });
       if (res.ok) {
@@ -628,9 +656,13 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       return p;
     });
     try {
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updated)
       });
       if (res.ok) {

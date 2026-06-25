@@ -289,9 +289,13 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
       const base64Str = await base64Promise;
 
       // 3. Post to upload API
+      const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({
           name: "test-rose.webp",
           base64: base64Str
@@ -339,12 +343,18 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
       // Delete single diagnostic test product first if it exists to verify save logic safely
       await fetch("/api/products/delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({ id: "diagnostic_test_rose" })
       });
       const dbSaveRes = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(testProduct)
       });
 
@@ -504,10 +514,15 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
       "Reading existing database to prevent overwriting catalog..."
     ]);
 
+    const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
+
     try {
       // Create a database backup before starting any upload/save activities
       setServerLogs(prev => [...prev, "Creating products database backup (products.backup.json)..."]);
-      const backupRes = await fetch("/api/products/backup", { method: "POST" });
+      const backupRes = await fetch("/api/products/backup", { 
+        method: "POST",
+        headers: { "X-CSRF-Token": csrfToken }
+      });
       if (!backupRes.ok) {
         throw new Error("Failed to create database backup prior to upload. Aborting!");
       }
@@ -557,7 +572,10 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
 
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
+          },
           body: JSON.stringify({
             name: item.name.replace(/\.[^/.]+$/, "") + ".webp",
             base64: base64Str
@@ -583,7 +601,10 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
 
       const analyzeRes = await fetch("/api/analyze-images", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify({
           files: uploadedFilesUrls.map(f => ({
             originalName: f.originalName,
@@ -703,7 +724,10 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
 
       const bulkRes = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
         body: JSON.stringify(updatedProductsList)
       });
 
@@ -760,7 +784,10 @@ export default function InventoryUpload({ onBack, onCatalogBuilt }: InventoryUpl
       console.error(err);
       setServerLogs(prev => [...prev, `❌ ERROR: ${err?.message || err}`, "Attempting automatic restore from products.backup.json..."]);
       try {
-        const restoreRes = await fetch("/api/products/restore", { method: "POST" });
+        const restoreRes = await fetch("/api/products/restore", { 
+          method: "POST",
+          headers: { "X-CSRF-Token": csrfToken }
+        });
         if (restoreRes.ok) {
           setServerLogs(prev => [...prev, "✓ Backup restored successfully. Database remains intact."]);
         } else {

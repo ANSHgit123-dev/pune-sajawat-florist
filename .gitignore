@@ -8,6 +8,8 @@ coverage/
 !.env.example
 
 # Database backups and temp files
+.vscode/
+scratch/
 .antigravity/
 products.backup*.json
 products.before_*.json

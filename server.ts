@@ -5,6 +5,105 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 dotenv.config();
 import { GoogleGenAI } from "@google/genai";
+import crypto from "crypto";
+
+// Fail fast if ADMIN_PASSWORD is not configured
+if (!process.env.ADMIN_PASSWORD) {
+  console.error("FATAL CONFIGURATION ERROR: ADMIN_PASSWORD environment variable is not defined!");
+  process.exit(1);
+}
+
+// Modular Session Interface & Memory Session Store (can be easily replaced with Redis or a DB store)
+export interface Session {
+  id: string;
+  csrfToken: string;
+  createdAt: number;
+}
+
+export interface SessionStore {
+  create(sessionId: string, csrfToken: string): void;
+  get(sessionId: string): Session | null;
+  delete(sessionId: string): void;
+}
+
+class MemorySessionStore implements SessionStore {
+  private sessions = new Map<string, Session>();
+  private readonly sessionExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
+
+  create(sessionId: string, csrfToken: string): void {
+    this.sessions.set(sessionId, {
+      id: sessionId,
+      csrfToken,
+      createdAt: Date.now()
+    });
+  }
+
+  get(sessionId: string): Session | null {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+    if (Date.now() - session.createdAt > this.sessionExpiryMs) {
+      this.sessions.delete(sessionId);
+      return null;
+    }
+    return session;
+  }
+
+  delete(sessionId: string): void {
+    this.sessions.delete(sessionId);
+  }
+}
+
+const sessionStore = new MemorySessionStore();
+
+// Rate limiting for login endpoint
+const loginAttempts = new Map<string, { count: number; lockUntil?: number }>();
+
+// Helper to manually parse cookie from headers
+const getSessionFromRequest = (req: express.Request): string | null => {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(";").reduce((acc: { [key: string]: string }, c) => {
+    const parts = c.split("=");
+    const name = parts[0]?.trim();
+    const val = parts.slice(1).join("=").trim();
+    if (name) acc[name] = val;
+    return acc;
+  }, {});
+  return cookies["admin_session"] || null;
+};
+
+// Middleware to verify session for GET requests
+const requireSession = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const sessionId = getSessionFromRequest(req);
+  if (!sessionId) {
+    return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+  }
+  const session = sessionStore.get(sessionId);
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
+  }
+  next();
+};
+
+// Middleware to verify session & CSRF token for POST/PUT/DELETE/modify requests
+const requireSessionWithCsrf = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const sessionId = getSessionFromRequest(req);
+  if (!sessionId) {
+    return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+  }
+  const session = sessionStore.get(sessionId);
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
+  }
+  
+  // CSRF verification: Check the custom request header
+  const csrfToken = req.headers["x-csrf-token"];
+  if (!csrfToken || csrfToken !== session.csrfToken) {
+    return res.status(403).json({ error: "Forbidden. Invalid or missing CSRF token." });
+  }
+  
+  next();
+};
 
 const app = express();
 const PORT = 3000;
@@ -61,6 +160,81 @@ app.use("/public", express.static(publicDir));
 // Keep check of static serving for /products as well just in case
 app.use("/products", express.static(productsDir));
 
+// ==========================================
+// ADMIN AUTHENTICATION & SESSION ENDPOINTS
+// ==========================================
+
+app.post("/api/admin/login", (req, res) => {
+  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  const ipStr = Array.isArray(ip) ? ip[0] : ip;
+
+  // Rate limiter check
+  const attempts = loginAttempts.get(ipStr);
+  if (attempts && attempts.lockUntil && attempts.lockUntil > Date.now()) {
+    const remainingTime = Math.ceil((attempts.lockUntil - Date.now()) / 1000);
+    return res.status(429).json({ error: `Too many login attempts. Please try again in ${remainingTime} seconds.` });
+  }
+
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: "Password is required" });
+  }
+
+  const securePassword = process.env.ADMIN_PASSWORD;
+
+  if (password === securePassword) {
+    // Reset rate limiter on success
+    loginAttempts.delete(ipStr);
+
+    // Regenerate session identifier
+    const sessionId = crypto.randomBytes(32).toString("hex");
+    const csrfToken = crypto.randomBytes(32).toString("hex");
+    sessionStore.create(sessionId, csrfToken);
+
+    const isProd = process.env.NODE_ENV === "production";
+    let cookieStr = `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
+    if (isProd) {
+      cookieStr += "; Secure";
+    }
+    res.setHeader("Set-Cookie", cookieStr);
+
+    return res.json({ success: true, csrfToken });
+  } else {
+    // Record failed attempt
+    const current = attempts || { count: 0 };
+    current.count += 1;
+    if (current.count >= 5) {
+      current.lockUntil = Date.now() + 60 * 1000; // 60 seconds lockout
+    }
+    loginAttempts.set(ipStr, current);
+
+    // Return generic error message
+    return res.status(401).json({ error: "Invalid credentials." });
+  }
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  const sessionId = getSessionFromRequest(req);
+  if (sessionId) {
+    sessionStore.delete(sessionId);
+  }
+  // Clear cookie
+  res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+  res.json({ success: true });
+});
+
+app.get("/api/admin/check-session", (req, res) => {
+  const sessionId = getSessionFromRequest(req);
+  if (!sessionId) {
+    return res.json({ authenticated: false });
+  }
+  const session = sessionStore.get(sessionId);
+  if (!session) {
+    return res.json({ authenticated: false });
+  }
+  res.json({ authenticated: true, csrfToken: session.csrfToken });
+});
+
 // API retrieve products from JSON file
 app.get("/api/products", (req, res) => {
   try {
@@ -82,7 +256,7 @@ app.get("/api/cms", (req, res) => {
 });
 
 // API save CMS settings
-app.post("/api/cms", (req, res) => {
+app.post("/api/cms", requireSessionWithCsrf, (req, res) => {
   try {
     const cmsData = req.body;
     fs.writeFileSync(cmsFile, JSON.stringify(cmsData, null, 2), "utf8");
@@ -207,7 +381,7 @@ const computeSimilarity = (p1: any, p2: any): number => {
 };
 
 // CREATE Product in JSON
-app.post("/api/products", (req, res) => {
+app.post("/api/products", requireSessionWithCsrf, (req, res) => {
   backupDatabase();
   try {
     const data = fs.readFileSync(databaseFile, "utf8");
@@ -270,7 +444,7 @@ app.post("/api/products", (req, res) => {
 });
 
 // Explicit backup endpoint
-app.post("/api/products/backup", (req, res) => {
+app.post("/api/products/backup", requireSessionWithCsrf, (req, res) => {
   try {
     backupDatabase();
     res.json({ success: true, message: "Backup created successfully." });
@@ -280,7 +454,7 @@ app.post("/api/products/backup", (req, res) => {
 });
 
 // Explicit restore endpoint
-app.post("/api/products/restore", (req, res) => {
+app.post("/api/products/restore", requireSessionWithCsrf, (req, res) => {
   try {
     const { index } = req.body;
     if (restoreDatabase(index)) {
@@ -294,7 +468,7 @@ app.post("/api/products/restore", (req, res) => {
 });
 
 // Bulk overwrite / save lists (Appends/updates only, never deletes)
-app.post("/api/products/bulk", (req, res) => {
+app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
   backupDatabase();
   try {
     const list = req.body;
@@ -364,7 +538,7 @@ app.post("/api/products/bulk", (req, res) => {
 });
 
 // API analyze uploaded image files using Gemini Vision AI
-app.post("/api/analyze-images", async (req, res) => {
+app.post("/api/analyze-images", requireSessionWithCsrf, async (req, res) => {
   try {
     console.log("=== API ANALYZE IMAGES REACHED ===");
     console.log("GEMINI_API_KEY from env:", process.env.GEMINI_API_KEY ? "EXISTS (length " + process.env.GEMINI_API_KEY.length + ")" : "MISSING");
@@ -493,7 +667,7 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
 });
 
 // Delete Product (Moves deleted products to deletedProducts.json, never deletes permanently)
-app.post("/api/products/delete", (req, res) => {
+app.post("/api/products/delete", requireSessionWithCsrf, (req, res) => {
   backupDatabase();
   try {
     const { id, ids } = req.body;
@@ -540,7 +714,7 @@ app.post("/api/products/delete", (req, res) => {
 });
 
 // Get Deleted Products
-app.get("/api/products/deleted", (req, res) => {
+app.get("/api/products/deleted", requireSession, (req, res) => {
   try {
     if (!fs.existsSync(deletedDatabaseFile)) {
       return res.json([]);
@@ -553,7 +727,7 @@ app.get("/api/products/deleted", (req, res) => {
 });
 
 // Restore Deleted Product
-app.post("/api/products/restore-deleted", (req, res) => {
+app.post("/api/products/restore-deleted", requireSessionWithCsrf, (req, res) => {
   backupDatabase();
   try {
     const { id } = req.body;
@@ -627,7 +801,7 @@ app.post("/api/products/restore-deleted", (req, res) => {
 });
 
 // Reset server database (Wipe catalog - backup first just in case)
-app.post("/api/products/reset", (req, res) => {
+app.post("/api/products/reset", requireSessionWithCsrf, (req, res) => {
   backupDatabase();
   try {
     fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
@@ -662,7 +836,7 @@ app.get("/api/check-file", (req, res) => {
 });
 
 // Upload endpoint that accepts file details and base64
-app.post("/api/upload", (req, res) => {
+app.post("/api/upload", requireSessionWithCsrf, (req, res) => {
   try {
     const { name, base64 } = req.body;
     if (!name || !base64) {
