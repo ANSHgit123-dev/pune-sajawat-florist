@@ -35,9 +35,9 @@ CREATE TABLE IF NOT EXISTS products (
   last_modified TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS (Row Level Security) if desired. For ease of serverless dynamic bypass,
--- the backend uses the service_role key which bypasses all RLS checks automatically.
+-- Enable RLS (Row Level Security) and configure public read access policy
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow read access to anyone" ON products;
 CREATE POLICY "Allow read access to anyone" ON products FOR SELECT USING (true);
 
 -- 2. Create deleted products (safety bin history) table
@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS deleted_products (
   deleted_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Enable RLS (no public policies exist, keeping data private to service_role)
 ALTER TABLE deleted_products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow read access to service role key" ON deleted_products USING (true);
 
 -- 3. Create CMS settings table
 CREATE TABLE IF NOT EXISTS cms_settings (
@@ -83,7 +83,9 @@ CREATE TABLE IF NOT EXISTS cms_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Enable RLS and configure public read access policy
 ALTER TABLE cms_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow read access to anyone" ON cms_settings;
 CREATE POLICY "Allow read access to anyone" ON cms_settings FOR SELECT USING (true);
 
 -- 4. Create backups table
@@ -93,6 +95,7 @@ CREATE TABLE IF NOT EXISTS backups (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Enable RLS (no public policies exist, keeping backups private to service_role)
 ALTER TABLE backups ENABLE ROW LEVEL SECURITY;
 
 -- 5. Create sessions table (stateless session backend)
@@ -102,4 +105,5 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Enable RLS (no public policies exist, keeping admin sessions private to service_role)
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;

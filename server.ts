@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 dotenv.config();
@@ -14,24 +13,20 @@ if (!process.env.ADMIN_PASSWORD) {
   process.exit(1);
 }
 
-// Supabase Configuration & Client Initialization
-const supabaseUrl = process.env.SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const supabase = (supabaseUrl && supabaseServiceKey)
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    })
-  : null;
-
-if (!supabase) {
-  console.warn("WARNING: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined. Falling back to local filesystem database.");
-  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
-    console.error("FATAL ERROR: Supabase is required in production / serverless Vercel environment.");
-    process.exit(1);
-  }
+// Fail fast if Supabase keys are missing
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("FATAL CONFIGURATION ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required!");
+  process.exit(1);
 }
 
-// Modular Session Interface & Session Stores
+// Supabase Configuration & Client Initialization
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false }
+});
+
+// Modular Session Interface & Session Store
 export interface Session {
   id: string;
   csrfToken: string;
@@ -44,40 +39,11 @@ export interface SessionStore {
   delete(sessionId: string): Promise<void> | void;
 }
 
-// 1. In-memory Session Store fallback for local development
-class MemorySessionStore implements SessionStore {
-  private sessions = new Map<string, Session>();
-  private readonly sessionExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
-
-  async create(sessionId: string, csrfToken: string): Promise<void> {
-    this.sessions.set(sessionId, {
-      id: sessionId,
-      csrfToken,
-      createdAt: Date.now()
-    });
-  }
-
-  async get(sessionId: string): Promise<Session | null> {
-    const session = this.sessions.get(sessionId);
-    if (!session) return null;
-    if (Date.now() - session.createdAt > this.sessionExpiryMs) {
-      this.sessions.delete(sessionId);
-      return null;
-    }
-    return session;
-  }
-
-  async delete(sessionId: string): Promise<void> {
-    this.sessions.delete(sessionId);
-  }
-}
-
-// 2. Database-backed Session Store for stateless serverless functions (Vercel)
+// Database-backed Session Store for stateless serverless functions (Vercel)
 class SupabaseSessionStore implements SessionStore {
   private readonly sessionExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
 
   async create(sessionId: string, csrfToken: string): Promise<void> {
-    if (!supabase) return;
     await supabase.from("sessions").insert({
       id: sessionId,
       csrf_token: csrfToken,
@@ -86,7 +52,6 @@ class SupabaseSessionStore implements SessionStore {
   }
 
   async get(sessionId: string): Promise<Session | null> {
-    if (!supabase) return null;
     const { data, error } = await supabase
       .from("sessions")
       .select("*")
@@ -109,12 +74,11 @@ class SupabaseSessionStore implements SessionStore {
   }
 
   async delete(sessionId: string): Promise<void> {
-    if (!supabase) return;
     await supabase.from("sessions").delete().eq("id", sessionId);
   }
 }
 
-const sessionStore = supabase ? new SupabaseSessionStore() : new MemorySessionStore();
+const sessionStore = new SupabaseSessionStore();
 
 // Rate limiting for login endpoint
 const loginAttempts = new Map<string, { count: number; lockUntil?: number }>();
@@ -181,13 +145,6 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-const rootDir = process.cwd();
-const publicDir = path.join(rootDir, "public");
-const productsDir = path.join(publicDir, "products");
-const databaseFile = path.join(rootDir, "products.json");
-const deletedDatabaseFile = path.join(rootDir, "deletedProducts.json");
-const cmsFile = path.join(rootDir, "cms.json");
-
 // Default CMS Settings payload
 function getDefaultCms() {
   return {
@@ -209,28 +166,6 @@ function getDefaultCms() {
     }
   };
 }
-
-// Ensure local physical directories and fallback files exist on start for local dev comfort
-if (!fs.existsSync(publicDir)) {
-  fs.mkdirSync(publicDir, { recursive: true });
-}
-if (!fs.existsSync(productsDir)) {
-  fs.mkdirSync(productsDir, { recursive: true });
-}
-if (!fs.existsSync(databaseFile)) {
-  fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
-}
-if (!fs.existsSync(deletedDatabaseFile)) {
-  fs.writeFileSync(deletedDatabaseFile, JSON.stringify([], null, 2), "utf8");
-}
-if (!fs.existsSync(cmsFile)) {
-  fs.writeFileSync(cmsFile, JSON.stringify(getDefaultCms(), null, 2), "utf8");
-}
-
-// Serve public directory statically under /public
-app.use("/public", express.static(publicDir));
-// Keep check of static serving for /products as well just in case
-app.use("/products", express.static(productsDir));
 
 // ============================================================================
 // DATA MAPPING HELPERS FOR SUPABASE (camelCase frontend <-> snake_case database)
@@ -309,52 +244,37 @@ function mapProductToDbProduct(product: any): any {
 // ==========================================
 const backupDatabase = async () => {
   try {
-    if (supabase) {
-      // Fetch active catalog
-      const { data: activeProds, error: fetchErr } = await supabase.from("products").select("*");
-      if (fetchErr) throw fetchErr;
+    // Fetch active catalog
+    const { data: activeProds, error: fetchErr } = await supabase.from("products").select("*");
+    if (fetchErr) throw fetchErr;
 
-      const mappedProds = (activeProds || []).map(mapDbProductToProduct);
+    const mappedProds = (activeProds || []).map(mapDbProductToProduct);
 
-      // Rotate existing backups: 4 -> 5, 3 -> 4, 2 -> 3, 1 -> 2
-      const { data: currentBackups, error: backupErr } = await supabase.from("backups").select("*");
-      if (backupErr) throw backupErr;
+    // Rotate existing backups: 4 -> 5, 3 -> 4, 2 -> 3, 1 -> 2
+    const { data: currentBackups, error: backupErr } = await supabase.from("backups").select("*");
+    if (backupErr) throw backupErr;
 
-      const backupsMap = new Map<number, any>();
-      (currentBackups || []).forEach(b => backupsMap.set(b.id, b.products));
+    const backupsMap = new Map<number, any>();
+    (currentBackups || []).forEach(b => backupsMap.set(b.id, b.products));
 
-      for (let i = 4; i >= 1; i--) {
-        const currentBackup = backupsMap.get(i);
-        if (currentBackup) {
-          await supabase.from("backups").upsert({
-            id: i + 1,
-            products: currentBackup,
-            created_at: new Date().toISOString()
-          });
-        }
-      }
-
-      // Save as Backup #1
-      await supabase.from("backups").upsert({
-        id: 1,
-        products: mappedProds,
-        created_at: new Date().toISOString()
-      });
-      console.log("Cloud backups rotated successfully.");
-    } else {
-      if (fs.existsSync(databaseFile)) {
-        for (let i = 4; i >= 1; i--) {
-          const src = path.join(rootDir, `products.backup${i}.json`);
-          const dest = path.join(rootDir, `products.backup${i + 1}.json`);
-          if (fs.existsSync(src)) {
-            fs.copyFileSync(src, dest);
-          }
-        }
-        fs.copyFileSync(databaseFile, path.join(rootDir, "products.backup1.json"));
-        fs.copyFileSync(databaseFile, path.join(rootDir, "products.backup.json"));
-        console.log("Local backups rotated successfully.");
+    for (let i = 4; i >= 1; i--) {
+      const currentBackup = backupsMap.get(i);
+      if (currentBackup) {
+        await supabase.from("backups").upsert({
+          id: i + 1,
+          products: currentBackup,
+          created_at: new Date().toISOString()
+        });
       }
     }
+
+    // Save as Backup #1
+    await supabase.from("backups").upsert({
+      id: 1,
+      products: mappedProds,
+      created_at: new Date().toISOString()
+    });
+    console.log("Cloud backups rotated successfully.");
   } catch (err) {
     console.error("Failed to create database backup:", err);
   }
@@ -362,41 +282,29 @@ const backupDatabase = async () => {
 
 const restoreDatabase = async (index?: number) => {
   try {
-    if (supabase) {
-      const backupIndex = index && index >= 1 && index <= 5 ? index : 1;
-      const { data, error } = await supabase
-        .from("backups")
-        .select("products")
-        .eq("id", backupIndex)
-        .single();
+    const backupIndex = index && index >= 1 && index <= 5 ? index : 1;
+    const { data, error } = await supabase
+      .from("backups")
+      .select("products")
+      .eq("id", backupIndex)
+      .single();
 
-      if (error || !data || !Array.isArray(data.products)) {
-        console.error(`Backup not found at index #${backupIndex}`);
-        return false;
-      }
-
-      // Wipe active catalog and insert backup items
-      const { error: deleteErr } = await supabase.from("products").delete().neq("id", "");
-      if (deleteErr) throw deleteErr;
-
-      const dbProds = data.products.map(mapProductToDbProduct);
-      if (dbProds.length > 0) {
-        const { error: insertErr } = await supabase.from("products").insert(dbProds);
-        if (insertErr) throw insertErr;
-      }
-      console.log(`Database restored from Cloud Backup #${backupIndex}`);
-      return true;
-    } else {
-      let backupPath = path.join(rootDir, "products.backup.json");
-      if (index && index >= 1 && index <= 5) {
-        backupPath = path.join(rootDir, `products.backup${index}.json`);
-      }
-      if (fs.existsSync(backupPath)) {
-        fs.copyFileSync(backupPath, databaseFile);
-        console.log(`Database restored from local file backup: ${backupPath}`);
-        return true;
-      }
+    if (error || !data || !Array.isArray(data.products)) {
+      console.error(`Backup not found at index #${backupIndex}`);
+      return false;
     }
+
+    // Wipe active catalog and insert backup items
+    const { error: deleteErr } = await supabase.from("products").delete().neq("id", "");
+    if (deleteErr) throw deleteErr;
+
+    const dbProds = data.products.map(mapProductToDbProduct);
+    if (dbProds.length > 0) {
+      const { error: insertErr } = await supabase.from("products").insert(dbProds);
+      if (insertErr) throw insertErr;
+    }
+    console.log(`Database restored from Cloud Backup #${backupIndex}`);
+    return true;
   } catch (err) {
     console.error("Failed to restore database from backup:", err);
   }
@@ -545,19 +453,14 @@ app.get("/api/admin/check-session", async (req, res) => {
 // API retrieve products
 app.get("/api/products", async (req, res) => {
   try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      const mapped = (data || []).map(mapDbProductToProduct);
-      res.json(mapped);
-    } else {
-      const data = fs.readFileSync(databaseFile, "utf8");
-      res.json(JSON.parse(data));
-    }
+    if (error) throw error;
+    const mapped = (data || []).map(mapDbProductToProduct);
+    res.json(mapped);
   } catch (err: any) {
     res.status(500).json({ error: "Failed to read products database", details: err?.message });
   }
@@ -566,23 +469,18 @@ app.get("/api/products", async (req, res) => {
 // API retrieve CMS settings
 app.get("/api/cms", async (req, res) => {
   try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("cms_settings")
-        .select("settings")
-        .eq("key", "default")
-        .single();
+    const { data, error } = await supabase
+      .from("cms_settings")
+      .select("settings")
+      .eq("key", "default")
+      .single();
 
-      if (error && error.code !== "PGRST116") throw error; // PGRST116 is single row missing
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 is single row missing
 
-      if (data && data.settings) {
-        res.json(data.settings);
-      } else {
-        res.json(getDefaultCms());
-      }
+    if (data && data.settings) {
+      res.json(data.settings);
     } else {
-      const data = fs.readFileSync(cmsFile, "utf8");
-      res.json(JSON.parse(data));
+      res.json(getDefaultCms());
     }
   } catch (err: any) {
     res.status(500).json({ error: "Failed to read CMS settings", details: err?.message });
@@ -593,17 +491,12 @@ app.get("/api/cms", async (req, res) => {
 app.post("/api/cms", requireSessionWithCsrf, async (req, res) => {
   try {
     const cmsData = req.body;
-    if (supabase) {
-      const { error } = await supabase
-        .from("cms_settings")
-        .upsert({ key: "default", settings: cmsData, updated_at: new Date().toISOString() });
+    const { error } = await supabase
+      .from("cms_settings")
+      .upsert({ key: "default", settings: cmsData, updated_at: new Date().toISOString() });
 
-      if (error) throw error;
-      res.json({ success: true, data: cmsData });
-    } else {
-      fs.writeFileSync(cmsFile, JSON.stringify(cmsData, null, 2), "utf8");
-      res.json({ success: true, data: cmsData });
-    }
+    if (error) throw error;
+    res.json({ success: true, data: cmsData });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to save CMS settings", details: err?.message });
   }
@@ -616,14 +509,9 @@ app.post("/api/products", requireSessionWithCsrf, async (req, res) => {
     const newProduct = req.body;
     let products: any[] = [];
 
-    if (supabase) {
-      const { data, error } = await supabase.from("products").select("*");
-      if (error) throw error;
-      products = (data || []).map(mapDbProductToProduct);
-    } else {
-      const data = fs.readFileSync(databaseFile, "utf8");
-      products = JSON.parse(data);
-    }
+    const { data, error } = await supabase.from("products").select("*");
+    if (error) throw error;
+    products = (data || []).map(mapDbProductToProduct);
 
     // Check if same product exists using similarity score >= 90%
     let idx = -1;
@@ -673,18 +561,9 @@ app.post("/api/products", requireSessionWithCsrf, async (req, res) => {
       finalProduct = newProduct;
     }
 
-    if (supabase) {
-      const dbProd = mapProductToDbProduct(finalProduct);
-      const { error } = await supabase.from("products").upsert(dbProd);
-      if (error) throw error;
-    } else {
-      if (idx !== -1) {
-        products[idx] = finalProduct;
-      } else {
-        products.push(finalProduct);
-      }
-      fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
-    }
+    const dbProd = mapProductToDbProduct(finalProduct);
+    const { error: upsertErr } = await supabase.from("products").upsert(dbProd);
+    if (upsertErr) throw upsertErr;
 
     res.status(201).json(finalProduct);
   } catch (err: any) {
@@ -728,14 +607,9 @@ app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
     }
 
     let productsList: any[] = [];
-    if (supabase) {
-      const { data, error } = await supabase.from("products").select("*");
-      if (error) throw error;
-      productsList = (data || []).map(mapDbProductToProduct);
-    } else {
-      const currentData = fs.readFileSync(databaseFile, "utf8");
-      productsList = JSON.parse(currentData);
-    }
+    const { data, error } = await supabase.from("products").select("*");
+    if (error) throw error;
+    productsList = (data || []).map(mapDbProductToProduct);
 
     const modifiedOrAddedDbProducts: any[] = [];
 
@@ -790,18 +664,12 @@ app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
         productsList.push(finalProduct);
       }
 
-      if (supabase) {
-        modifiedOrAddedDbProducts.push(mapProductToDbProduct(finalProduct));
-      }
+      modifiedOrAddedDbProducts.push(mapProductToDbProduct(finalProduct));
     });
 
-    if (supabase) {
-      if (modifiedOrAddedDbProducts.length > 0) {
-        const { error } = await supabase.from("products").upsert(modifiedOrAddedDbProducts);
-        if (error) throw error;
-      }
-    } else {
-      fs.writeFileSync(databaseFile, JSON.stringify(productsList, null, 2), "utf8");
+    if (modifiedOrAddedDbProducts.length > 0) {
+      const { error: upsertErr } = await supabase.from("products").upsert(modifiedOrAddedDbProducts);
+      if (upsertErr) throw upsertErr;
     }
 
     res.json({ success: true, count: productsList.length });
@@ -937,7 +805,7 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
   }
 });
 
-// Delete Product (Moves deleted products to database Safety Bin, never deletes permanently)
+// Delete Product
 app.post("/api/products/delete", requireSessionWithCsrf, async (req, res) => {
   await backupDatabase();
   try {
@@ -950,68 +818,33 @@ app.post("/api/products/delete", requireSessionWithCsrf, async (req, res) => {
     const targetsToDelete = ids ? ids : [id];
     let productsToMove: any[] = [];
 
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .in("id", targetsToDelete);
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", targetsToDelete);
 
-      if (error) throw error;
-      productsToMove = (data || []).map(mapDbProductToProduct);
-    } else {
-      const data = fs.readFileSync(databaseFile, "utf8");
-      const products = JSON.parse(data);
-      productsToMove = products.filter((p: any) => targetsToDelete.includes(p.id));
-    }
+    if (error) throw error;
+    productsToMove = (data || []).map(mapDbProductToProduct);
 
     if (productsToMove.length === 0) {
       return res.json({ success: true, deletedCount: 0 });
     }
 
-    if (supabase) {
-      const deletedDbRecords = productsToMove.map(p => {
-        const dbProd = mapProductToDbProduct(p);
-        return {
-          ...dbProd,
-          deleted_at: new Date().toISOString()
-        };
-      });
+    const deletedDbRecords = productsToMove.map(p => {
+      const dbProd = mapProductToDbProduct(p);
+      return {
+        ...dbProd,
+        deleted_at: new Date().toISOString()
+      };
+    });
 
-      // Upsert into deleted_products
-      const { error: insertError } = await supabase.from("deleted_products").upsert(deletedDbRecords);
-      if (insertError) throw insertError;
+    // Upsert into deleted_products
+    const { error: insertError } = await supabase.from("deleted_products").upsert(deletedDbRecords);
+    if (insertError) throw insertError;
 
-      // Delete from active products
-      const { error: deleteError } = await supabase.from("products").delete().in("id", targetsToDelete);
-      if (deleteError) throw deleteError;
-    } else {
-      let deletedProducts: any[] = [];
-      if (fs.existsSync(deletedDatabaseFile)) {
-        try {
-          const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
-          deletedProducts = JSON.parse(delData);
-        } catch (e) {
-          deletedProducts = [];
-        }
-      }
-
-      productsToMove.forEach((p: any) => {
-        const existsIdx = deletedProducts.findIndex((dp: any) => dp.id === p.id);
-        if (existsIdx === -1) {
-          deletedProducts.push({
-            ...p,
-            deletedAt: new Date().toISOString()
-          });
-        }
-      });
-
-      fs.writeFileSync(deletedDatabaseFile, JSON.stringify(deletedProducts, null, 2), "utf8");
-
-      const data = fs.readFileSync(databaseFile, "utf8");
-      let products = JSON.parse(data);
-      products = products.filter((p: any) => !targetsToDelete.includes(p.id));
-      fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
-    }
+    // Delete from active products
+    const { error: deleteError } = await supabase.from("products").delete().in("id", targetsToDelete);
+    if (deleteError) throw deleteError;
 
     res.json({ success: true, deletedCount: productsToMove.length });
   } catch (err: any) {
@@ -1023,22 +856,14 @@ app.post("/api/products/delete", requireSessionWithCsrf, async (req, res) => {
 // Get Deleted Products
 app.get("/api/products/deleted", requireSession, async (req, res) => {
   try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("deleted_products")
-        .select("*")
-        .order("deleted_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("deleted_products")
+      .select("*")
+      .order("deleted_at", { ascending: false });
 
-      if (error) throw error;
-      const mapped = (data || []).map(mapDbProductToProduct);
-      res.json(mapped);
-    } else {
-      if (!fs.existsSync(deletedDatabaseFile)) {
-        return res.json([]);
-      }
-      const data = fs.readFileSync(deletedDatabaseFile, "utf8");
-      res.json(JSON.parse(data));
-    }
+    if (error) throw error;
+    const mapped = (data || []).map(mapDbProductToProduct);
+    res.json(mapped);
   } catch (err: any) {
     res.status(500).json({ error: "Failed to read deleted products database", details: err?.message });
   }
@@ -1055,27 +880,14 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, async (req, re
     }
 
     let productToRestore: any = null;
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("deleted_products")
-        .select("*")
-        .eq("id", id)
-        .single();
+    const { data, error } = await supabase
+      .from("deleted_products")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-      if (error) throw error;
-      productToRestore = mapDbProductToProduct(data);
-    } else {
-      if (!fs.existsSync(deletedDatabaseFile)) {
-        await restoreDatabase();
-        return res.status(400).json({ error: "No deleted products exist to restore." });
-      }
-      const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
-      const deletedProducts = JSON.parse(delData);
-      const matchIdx = deletedProducts.findIndex((p: any) => p.id === id);
-      if (matchIdx !== -1) {
-        productToRestore = deletedProducts[matchIdx];
-      }
-    }
+    if (error) throw error;
+    productToRestore = mapDbProductToProduct(data);
 
     if (!productToRestore) {
       await restoreDatabase();
@@ -1085,14 +897,9 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, async (req, re
     delete productToRestore.deletedAt;
 
     let activeProducts: any[] = [];
-    if (supabase) {
-      const { data, error } = await supabase.from("products").select("*");
-      if (error) throw error;
-      activeProducts = (data || []).map(mapDbProductToProduct);
-    } else {
-      const data = fs.readFileSync(databaseFile, "utf8");
-      activeProducts = JSON.parse(data);
-    }
+    const { data: activeData, error: activeErr } = await supabase.from("products").select("*");
+    if (activeErr) throw activeErr;
+    activeProducts = (activeData || []).map(mapDbProductToProduct);
 
     let idx = -1;
     for (let i = 0; i < activeProducts.length; i++) {
@@ -1126,25 +933,13 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, async (req, re
       finalProduct = productToRestore;
     }
 
-    if (supabase) {
-      const { error: activeError } = await supabase.from("products").upsert(mapProductToDbProduct(finalProduct));
-      if (activeError) throw activeError;
+    // Upsert active
+    const { error: activeError } = await supabase.from("products").upsert(mapProductToDbProduct(finalProduct));
+    if (activeError) throw activeError;
 
-      const { error: delError } = await supabase.from("deleted_products").delete().eq("id", id);
-      if (delError) throw delError;
-    } else {
-      if (idx !== -1) {
-        activeProducts[idx] = finalProduct;
-      } else {
-        activeProducts.push(finalProduct);
-      }
-      fs.writeFileSync(databaseFile, JSON.stringify(activeProducts, null, 2), "utf8");
-
-      const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
-      const deletedProducts = JSON.parse(delData);
-      const updatedDel = deletedProducts.filter((p: any) => p.id !== id);
-      fs.writeFileSync(deletedDatabaseFile, JSON.stringify(updatedDel, null, 2), "utf8");
-    }
+    // Delete deleted
+    const { error: delError } = await supabase.from("deleted_products").delete().eq("id", id);
+    if (delError) throw delError;
 
     res.json({ success: true, restoredProduct: finalProduct });
   } catch (err: any) {
@@ -1153,25 +948,20 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, async (req, re
   }
 });
 
-// Reset database (Wipe catalog)
+// Reset database
 app.post("/api/products/reset", requireSessionWithCsrf, async (req, res) => {
   await backupDatabase();
   try {
-    if (supabase) {
-      const { error } = await supabase.from("products").delete().neq("id", "");
-      if (error) throw error;
-      res.json({ success: true, count: 0 });
-    } else {
-      fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
-      res.json({ success: true, count: 0 });
-    }
+    const { error } = await supabase.from("products").delete().neq("id", "");
+    if (error) throw error;
+    res.json({ success: true, count: 0 });
   } catch (err: any) {
     await restoreDatabase();
     res.status(500).json({ error: "Failed to reset products list", details: err?.message });
   }
 });
 
-// Endpoint to verify physical file existence inside Storage/disk
+// Endpoint to verify physical file existence inside Storage
 app.get("/api/check-file", async (req, res) => {
   try {
     const relativePath = req.query.path as string;
@@ -1179,33 +969,20 @@ app.get("/api/check-file", async (req, res) => {
       return res.status(400).json({ exists: false, error: "Path query parameter is required" });
     }
 
-    if (supabase) {
-      const filename = path.basename(relativePath);
-      const { data, error } = await supabase.storage.from("products").list("", {
-        search: filename
-      });
+    const filename = path.basename(relativePath);
+    const { data, error } = await supabase.storage.from("products").list("", {
+      search: filename
+    });
 
-      const exists = !error && data && data.some(f => f.name === filename);
-      const match = exists ? data.find(f => f.name === filename) : null;
+    const exists = !error && data && data.some(f => f.name === filename);
+    const match = exists ? data.find(f => f.name === filename) : null;
 
-      res.json({
-        exists,
-        absolutePath: relativePath,
-        size: match && match.metadata ? (match.metadata as any).size : 0,
-        createdAt: match ? match.created_at : null
-      });
-    } else {
-      const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
-      const absolutePath = path.join(publicDir, normalized.replace(/^\/?public\/?/, ""));
-      const exists = fs.existsSync(absolutePath);
-      const stats = exists ? fs.statSync(absolutePath) : null;
-      res.json({
-        exists,
-        absolutePath,
-        size: stats ? stats.size : 0,
-        createdAt: stats ? stats.mtime : null
-      });
-    }
+    res.json({
+      exists,
+      absolutePath: relativePath,
+      size: match && match.metadata ? (match.metadata as any).size : 0,
+      createdAt: match ? match.created_at : null
+    });
   } catch (err: any) {
     res.status(500).json({ exists: false, error: err?.message });
   }
@@ -1237,27 +1014,20 @@ app.post("/api/upload", requireSessionWithCsrf, async (req, res) => {
     // Create unique filename
     const finalName = `${base}-${Date.now()}${ext}`;
 
-    if (supabase) {
-      const { error } = await supabase.storage
-        .from("products")
-        .upload(finalName, dataBuffer, {
-          contentType: mimeType,
-          upsert: true
-        });
+    const { error } = await supabase.storage
+      .from("products")
+      .upload(finalName, dataBuffer, {
+        contentType: mimeType,
+        upsert: true
+      });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(finalName);
+    const { data: publicUrlData } = supabase.storage
+      .from("products")
+      .getPublicUrl(finalName);
 
-      res.json({ url: publicUrlData.publicUrl, name: finalName });
-    } else {
-      const targetPath = path.join(productsDir, finalName);
-      fs.writeFileSync(targetPath, dataBuffer);
-      const publicUrl = `/public/products/${finalName}`;
-      res.json({ url: publicUrl, name: finalName });
-    }
+    res.json({ url: publicUrlData.publicUrl, name: finalName });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to upload file", details: err?.message });
   }
@@ -1268,20 +1038,18 @@ async function startServer() {
     console.log("Running in Vercel Serverless environment. Not binding port listener.");
     
     // Seed default CMS settings dynamically on boot if connected to Supabase and missing
-    if (supabase) {
-      try {
-        const { data } = await supabase.from("cms_settings").select("key").eq("key", "default").single();
-        if (!data) {
-          await supabase.from("cms_settings").insert({
-            key: "default",
-            settings: getDefaultCms(),
-            updated_at: new Date().toISOString()
-          });
-          console.log("Seeded default CMS settings in Supabase.");
-        }
-      } catch (err) {
-        console.error("Could not seed default CMS settings in Supabase:", err);
+    try {
+      const { data } = await supabase.from("cms_settings").select("key").eq("key", "default").single();
+      if (!data) {
+        await supabase.from("cms_settings").insert({
+          key: "default",
+          settings: getDefaultCms(),
+          updated_at: new Date().toISOString()
+        });
+        console.log("Seeded default CMS settings in Supabase.");
       }
+    } catch (err) {
+      console.error("Could not seed default CMS settings in Supabase:", err);
     }
     return;
   }
