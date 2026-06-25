@@ -743,7 +743,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                 autoFocus
                 id="admin-password-input"
               />
-              <span className="text-[9.5px] text-stone-500 block">Development Hint: Enter <span className="text-stone-300 font-bold font-mono">admin</span> to access quickly.</span>
+              <span className="text-[9.5px] text-stone-500 block">Authorized personnel only. Sessions are monitored.</span>
             </div>
 
             {loginError && (
