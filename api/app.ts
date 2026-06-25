@@ -463,7 +463,16 @@ app.get("/api/products", async (req, res) => {
     const mapped = (data || []).map(mapDbProductToProduct);
     res.json(mapped);
   } catch (err: any) {
-    res.status(500).json({ error: "Failed to read products database", details: err?.message });
+    console.error("FULL SUPABASE ERROR:", err);
+    console.error("MESSAGE:", err?.message);
+    console.error("CODE:", err?.code);
+    console.error("DETAILS:", err?.details);
+    console.error("HINT:", err?.hint);
+
+    return res.status(500).json({
+      error: "Failed to read products database",
+      details: err
+    });
   }
 });
 
