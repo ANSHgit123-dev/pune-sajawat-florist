@@ -108,7 +108,7 @@ async function runVerification() {
       .eq("id", tempProductId)
       .single();
     if (prodSelectErr) throw prodSelectErr;
-    if (prodData && prodData.price === "999") { // price returns as string from numeric sometimes
+    if (prodData && Number(prodData.price) === 999) { // price returns as number or string from numeric
       console.log("✅ Read test product price successfully.");
       results.productRead = true;
     }
@@ -152,6 +152,7 @@ async function runVerification() {
     if (fetchDelErr) throw fetchDelErr;
 
     // Insert back to active products
+    delete deletedProd.deleted_at;
     const { error: restoreInsertErr } = await supabase.from("products").insert(deletedProd);
     if (restoreInsertErr) throw restoreInsertErr;
 
