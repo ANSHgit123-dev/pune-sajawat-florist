@@ -157,29 +157,6 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-stone-500 font-medium" id="copyright-bar">
           <div className="flex items-center gap-2.5">
             <span>© {currentYear} Sajawat Florist. Associated with India's best gifting channels.</span>
-            <span className="text-stone-700 font-normal">|</span>
-            <button 
-              onClick={() => {
-                window.history.pushState({}, "", "/admin");
-                window.dispatchEvent(new PopStateEvent("popstate"));
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }} 
-              className="text-stone-500 hover:text-rose-500 hover:underline transition-colors cursor-pointer text-[10.5px] font-semibold"
-            >
-              Florist Console 🔐
-            </button>
-            <span className="text-stone-700 font-normal">|</span>
-            <button 
-              onClick={() => {
-                localStorage.removeItem("sajawat_catalog_products");
-                window.dispatchEvent(new Event("sajawat_catalog_updated"));
-                window.location.reload();
-              }} 
-              className="text-stone-500 hover:text-[#82862F] hover:underline transition-colors cursor-pointer text-[10.5px] font-semibold"
-              title="Reset processed catalog and view onboarding statistics"
-            >
-              Reset & Re-run AI Scanner 🔄
-            </button>
           </div>
 
           <div className="flex items-center gap-1 text-[11px]">

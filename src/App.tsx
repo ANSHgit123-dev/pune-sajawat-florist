@@ -549,17 +549,17 @@ export default function App() {
             <Flower className="w-8 h-8 animate-spin-lazy" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-stone-900 font-serif">No Products Available</h2>
+            <h2 className="text-xl font-bold text-stone-900 font-serif">We're updating our collection</h2>
             <p className="text-xs text-stone-500 leading-relaxed font-light">
-              We are currently updating our florist inventory. Please visit the dashboard to upload products or try again in a few minutes.
+              New floral arrangements are coming soon. In the meantime, please contact us on WhatsApp for custom orders and inquiries.
             </p>
           </div>
           <div className="flex flex-col gap-2 pt-2">
             <button
-              onClick={() => navigateTo("/admin")}
-              className="w-full py-3 bg-[#82862F] hover:bg-[#6C7026] text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md active:scale-98"
+              onClick={handleDirectWhatsAppHotline}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md active:scale-98 flex items-center justify-center gap-1.5"
             >
-              Go to Admin Dashboard 🔑
+              Contact on WhatsApp 💬
             </button>
           </div>
         </div>
