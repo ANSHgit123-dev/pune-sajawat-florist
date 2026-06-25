@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { GoogleGenAI } from "@google/genai";
 import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
 // Fail fast if ADMIN_PASSWORD is not configured
 if (!process.env.ADMIN_PASSWORD) {
@@ -13,7 +14,24 @@ if (!process.env.ADMIN_PASSWORD) {
   process.exit(1);
 }
 
-// Modular Session Interface & Memory Session Store (can be easily replaced with Redis or a DB store)
+// Supabase Configuration & Client Initialization
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabase = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    })
+  : null;
+
+if (!supabase) {
+  console.warn("WARNING: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined. Falling back to local filesystem database.");
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+    console.error("FATAL ERROR: Supabase is required in production / serverless Vercel environment.");
+    process.exit(1);
+  }
+}
+
+// Modular Session Interface & Session Stores
 export interface Session {
   id: string;
   csrfToken: string;
@@ -21,16 +39,17 @@ export interface Session {
 }
 
 export interface SessionStore {
-  create(sessionId: string, csrfToken: string): void;
-  get(sessionId: string): Session | null;
-  delete(sessionId: string): void;
+  create(sessionId: string, csrfToken: string): Promise<void> | void;
+  get(sessionId: string): Promise<Session | null> | Session | null;
+  delete(sessionId: string): Promise<void> | void;
 }
 
+// 1. In-memory Session Store fallback for local development
 class MemorySessionStore implements SessionStore {
   private sessions = new Map<string, Session>();
   private readonly sessionExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
 
-  create(sessionId: string, csrfToken: string): void {
+  async create(sessionId: string, csrfToken: string): Promise<void> {
     this.sessions.set(sessionId, {
       id: sessionId,
       csrfToken,
@@ -38,7 +57,7 @@ class MemorySessionStore implements SessionStore {
     });
   }
 
-  get(sessionId: string): Session | null {
+  async get(sessionId: string): Promise<Session | null> {
     const session = this.sessions.get(sessionId);
     if (!session) return null;
     if (Date.now() - session.createdAt > this.sessionExpiryMs) {
@@ -48,12 +67,54 @@ class MemorySessionStore implements SessionStore {
     return session;
   }
 
-  delete(sessionId: string): void {
+  async delete(sessionId: string): Promise<void> {
     this.sessions.delete(sessionId);
   }
 }
 
-const sessionStore = new MemorySessionStore();
+// 2. Database-backed Session Store for stateless serverless functions (Vercel)
+class SupabaseSessionStore implements SessionStore {
+  private readonly sessionExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
+
+  async create(sessionId: string, csrfToken: string): Promise<void> {
+    if (!supabase) return;
+    await supabase.from("sessions").insert({
+      id: sessionId,
+      csrf_token: csrfToken,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  async get(sessionId: string): Promise<Session | null> {
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .single();
+
+    if (error || !data) return null;
+
+    const createdAtMs = new Date(data.created_at).getTime();
+    if (Date.now() - createdAtMs > this.sessionExpiryMs) {
+      await this.delete(sessionId);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      csrfToken: data.csrf_token,
+      createdAt: createdAtMs
+    };
+  }
+
+  async delete(sessionId: string): Promise<void> {
+    if (!supabase) return;
+    await supabase.from("sessions").delete().eq("id", sessionId);
+  }
+}
+
+const sessionStore = supabase ? new SupabaseSessionStore() : new MemorySessionStore();
 
 // Rate limiting for login endpoint
 const loginAttempts = new Map<string, { count: number; lockUntil?: number }>();
@@ -73,36 +134,44 @@ const getSessionFromRequest = (req: express.Request): string | null => {
 };
 
 // Middleware to verify session for GET requests
-const requireSession = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const sessionId = getSessionFromRequest(req);
-  if (!sessionId) {
-    return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+const requireSession = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try {
+    const sessionId = getSessionFromRequest(req);
+    if (!sessionId) {
+      return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+    }
+    const session = await sessionStore.get(sessionId);
+    if (!session) {
+      return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  const session = sessionStore.get(sessionId);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
-  }
-  next();
 };
 
 // Middleware to verify session & CSRF token for POST/PUT/DELETE/modify requests
-const requireSessionWithCsrf = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const sessionId = getSessionFromRequest(req);
-  if (!sessionId) {
-    return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+const requireSessionWithCsrf = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try {
+    const sessionId = getSessionFromRequest(req);
+    if (!sessionId) {
+      return res.status(401).json({ error: "Unauthorized. Missing session cookie." });
+    }
+    const session = await sessionStore.get(sessionId);
+    if (!session) {
+      return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
+    }
+    
+    // CSRF verification: Check the custom request header
+    const csrfToken = req.headers["x-csrf-token"];
+    if (!csrfToken || csrfToken !== session.csrfToken) {
+      return res.status(403).json({ error: "Forbidden. Invalid or missing CSRF token." });
+    }
+    
+    next();
+  } catch (err) {
+    next(err);
   }
-  const session = sessionStore.get(sessionId);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
-  }
-  
-  // CSRF verification: Check the custom request header
-  const csrfToken = req.headers["x-csrf-token"];
-  if (!csrfToken || csrfToken !== session.csrfToken) {
-    return res.status(403).json({ error: "Forbidden. Invalid or missing CSRF token." });
-  }
-  
-  next();
 };
 
 const app = express();
@@ -119,21 +188,9 @@ const databaseFile = path.join(rootDir, "products.json");
 const deletedDatabaseFile = path.join(rootDir, "deletedProducts.json");
 const cmsFile = path.join(rootDir, "cms.json");
 
-// Ensure physical directories exist on start
-if (!fs.existsSync(publicDir)) {
-  fs.mkdirSync(publicDir, { recursive: true });
-}
-if (!fs.existsSync(productsDir)) {
-  fs.mkdirSync(productsDir, { recursive: true });
-}
-if (!fs.existsSync(databaseFile)) {
-  fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
-}
-if (!fs.existsSync(deletedDatabaseFile)) {
-  fs.writeFileSync(deletedDatabaseFile, JSON.stringify([], null, 2), "utf8");
-}
-if (!fs.existsSync(cmsFile)) {
-  const defaultCms = {
+// Default CMS Settings payload
+function getDefaultCms() {
+  return {
     sections: [
       { id: "flowers", name: "Flowers", displayOrder: 1, bannerImage: "", hidden: false, isFeatured: true },
       { id: "bouquets", name: "Bouquets", displayOrder: 2, bannerImage: "", hidden: false, isFeatured: true },
@@ -151,159 +208,194 @@ if (!fs.existsSync(cmsFile)) {
       bannerProductIds: []
     }
   };
-  fs.writeFileSync(cmsFile, JSON.stringify(defaultCms, null, 2), "utf8");
+}
+
+// Ensure local physical directories and fallback files exist on start for local dev comfort
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+if (!fs.existsSync(productsDir)) {
+  fs.mkdirSync(productsDir, { recursive: true });
+}
+if (!fs.existsSync(databaseFile)) {
+  fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
+}
+if (!fs.existsSync(deletedDatabaseFile)) {
+  fs.writeFileSync(deletedDatabaseFile, JSON.stringify([], null, 2), "utf8");
+}
+if (!fs.existsSync(cmsFile)) {
+  fs.writeFileSync(cmsFile, JSON.stringify(getDefaultCms(), null, 2), "utf8");
 }
 
 // Serve public directory statically under /public
 app.use("/public", express.static(publicDir));
-
 // Keep check of static serving for /products as well just in case
 app.use("/products", express.static(productsDir));
 
+// ============================================================================
+// DATA MAPPING HELPERS FOR SUPABASE (camelCase frontend <-> snake_case database)
+// ============================================================================
+function mapDbProductToProduct(dbProduct: any): any {
+  if (!dbProduct) return null;
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    title: dbProduct.title,
+    category: dbProduct.category,
+    price: Number(dbProduct.price),
+    originalPrice: dbProduct.original_price !== null ? Number(dbProduct.original_price) : undefined,
+    image: dbProduct.image,
+    images: Array.isArray(dbProduct.images) ? dbProduct.images : [],
+    galleryImages: Array.isArray(dbProduct.gallery_images) ? dbProduct.gallery_images : [],
+    description: dbProduct.description,
+    shortDescription: dbProduct.short_description,
+    longDescription: dbProduct.long_description,
+    rating: dbProduct.rating !== null ? Number(dbProduct.rating) : 5,
+    reviewsCount: dbProduct.reviews_count !== null ? Number(dbProduct.reviews_count) : 0,
+    isBestSeller: !!dbProduct.is_best_seller,
+    isNew: !!dbProduct.is_new,
+    isTrending: !!dbProduct.is_trending,
+    isRecommended: !!dbProduct.is_recommended,
+    isFeatured: !!dbProduct.is_featured,
+    isEnabled: !!dbProduct.is_enabled,
+    isHidden: !!dbProduct.is_hidden,
+    createdAt: dbProduct.created_at,
+    sku: dbProduct.sku,
+    quantity: dbProduct.quantity !== null ? Number(dbProduct.quantity) : 1,
+    lowStockAlert: dbProduct.low_stock_alert !== null ? Number(dbProduct.low_stock_alert) : 0,
+    deliverySettings: dbProduct.delivery_settings || {},
+    addons: Array.isArray(dbProduct.addons) ? dbProduct.addons : [],
+    lastModified: dbProduct.last_modified,
+    deletedAt: dbProduct.deleted_at
+  };
+}
+
+function mapProductToDbProduct(product: any): any {
+  if (!product) return null;
+  return {
+    id: product.id,
+    name: product.name || "",
+    title: product.title || "",
+    category: product.category || "",
+    price: Number(product.price) || 0,
+    original_price: product.originalPrice !== undefined ? Number(product.originalPrice) : null,
+    image: product.image || null,
+    images: Array.isArray(product.images) ? product.images : [],
+    gallery_images: Array.isArray(product.galleryImages) ? product.galleryImages : [],
+    description: product.description || null,
+    short_description: product.shortDescription || null,
+    long_description: product.longDescription || null,
+    rating: product.rating !== undefined ? Number(product.rating) : 5,
+    reviews_count: product.reviewsCount !== undefined ? Number(product.reviewsCount) : 0,
+    is_best_seller: !!product.isBestSeller,
+    is_new: !!product.isNew,
+    is_trending: !!product.isTrending,
+    is_recommended: !!product.isRecommended,
+    is_featured: !!product.isFeatured,
+    is_enabled: product.isEnabled !== undefined ? !!product.isEnabled : true,
+    is_hidden: !!product.isHidden,
+    created_at: product.createdAt || new Date().toISOString(),
+    sku: product.sku || null,
+    quantity: product.quantity !== undefined ? Number(product.quantity) : 1,
+    low_stock_alert: product.lowStockAlert !== undefined ? Number(product.lowStockAlert) : 0,
+    delivery_settings: product.deliverySettings || {},
+    addons: Array.isArray(product.addons) ? product.addons : [],
+    last_modified: product.lastModified || new Date().toISOString()
+  };
+}
+
 // ==========================================
-// ADMIN AUTHENTICATION & SESSION ENDPOINTS
+// BACKUP AND RESTORE ROTATION IN CLOUD DB
 // ==========================================
-
-app.post("/api/admin/login", (req, res) => {
-  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
-  const ipStr = Array.isArray(ip) ? ip[0] : ip;
-
-  // Rate limiter check
-  const attempts = loginAttempts.get(ipStr);
-  if (attempts && attempts.lockUntil && attempts.lockUntil > Date.now()) {
-    const remainingTime = Math.ceil((attempts.lockUntil - Date.now()) / 1000);
-    return res.status(429).json({ error: `Too many login attempts. Please try again in ${remainingTime} seconds.` });
-  }
-
-  const { password } = req.body;
-  if (!password) {
-    return res.status(400).json({ error: "Password is required" });
-  }
-
-  const securePassword = process.env.ADMIN_PASSWORD;
-
-  if (password === securePassword) {
-    // Reset rate limiter on success
-    loginAttempts.delete(ipStr);
-
-    // Regenerate session identifier
-    const sessionId = crypto.randomBytes(32).toString("hex");
-    const csrfToken = crypto.randomBytes(32).toString("hex");
-    sessionStore.create(sessionId, csrfToken);
-
-    const isProd = process.env.NODE_ENV === "production";
-    let cookieStr = `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
-    if (isProd) {
-      cookieStr += "; Secure";
-    }
-    res.setHeader("Set-Cookie", cookieStr);
-
-    return res.json({ success: true, csrfToken });
-  } else {
-    // Record failed attempt
-    const current = attempts || { count: 0 };
-    current.count += 1;
-    if (current.count >= 5) {
-      current.lockUntil = Date.now() + 60 * 1000; // 60 seconds lockout
-    }
-    loginAttempts.set(ipStr, current);
-
-    // Return generic error message
-    return res.status(401).json({ error: "Invalid credentials." });
-  }
-});
-
-app.post("/api/admin/logout", (req, res) => {
-  const sessionId = getSessionFromRequest(req);
-  if (sessionId) {
-    sessionStore.delete(sessionId);
-  }
-  // Clear cookie
-  res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
-  res.json({ success: true });
-});
-
-app.get("/api/admin/check-session", (req, res) => {
-  const sessionId = getSessionFromRequest(req);
-  if (!sessionId) {
-    return res.json({ authenticated: false });
-  }
-  const session = sessionStore.get(sessionId);
-  if (!session) {
-    return res.json({ authenticated: false });
-  }
-  res.json({ authenticated: true, csrfToken: session.csrfToken });
-});
-
-// API retrieve products from JSON file
-app.get("/api/products", (req, res) => {
+const backupDatabase = async () => {
   try {
-    const data = fs.readFileSync(databaseFile, "utf8");
-    res.json(JSON.parse(data));
-  } catch (err: any) {
-    res.status(500).json({ error: "Failed to read products database", details: err?.message });
-  }
-});
+    if (supabase) {
+      // Fetch active catalog
+      const { data: activeProds, error: fetchErr } = await supabase.from("products").select("*");
+      if (fetchErr) throw fetchErr;
 
-// API retrieve CMS settings
-app.get("/api/cms", (req, res) => {
-  try {
-    const data = fs.readFileSync(cmsFile, "utf8");
-    res.json(JSON.parse(data));
-  } catch (err: any) {
-    res.status(500).json({ error: "Failed to read CMS settings", details: err?.message });
-  }
-});
+      const mappedProds = (activeProds || []).map(mapDbProductToProduct);
 
-// API save CMS settings
-app.post("/api/cms", requireSessionWithCsrf, (req, res) => {
-  try {
-    const cmsData = req.body;
-    fs.writeFileSync(cmsFile, JSON.stringify(cmsData, null, 2), "utf8");
-    res.json({ success: true, data: cmsData });
-  } catch (err: any) {
-    res.status(500).json({ error: "Failed to save CMS settings", details: err?.message });
-  }
-});
+      // Rotate existing backups: 4 -> 5, 3 -> 4, 2 -> 3, 1 -> 2
+      const { data: currentBackups, error: backupErr } = await supabase.from("backups").select("*");
+      if (backupErr) throw backupErr;
 
-// CREATE Product in JSON
-// CREATE Product in JSON
-const backupDatabase = () => {
-  try {
-    if (fs.existsSync(databaseFile)) {
-      // Shift rotated backups: 4 -> 5, 3 -> 4, 2 -> 3, 1 -> 2
+      const backupsMap = new Map<number, any>();
+      (currentBackups || []).forEach(b => backupsMap.set(b.id, b.products));
+
       for (let i = 4; i >= 1; i--) {
-        const src = path.join(rootDir, `products.backup${i}.json`);
-        const dest = path.join(rootDir, `products.backup${i + 1}.json`);
-        if (fs.existsSync(src)) {
-          fs.copyFileSync(src, dest);
+        const currentBackup = backupsMap.get(i);
+        if (currentBackup) {
+          await supabase.from("backups").upsert({
+            id: i + 1,
+            products: currentBackup,
+            created_at: new Date().toISOString()
+          });
         }
       }
-      
-      // Copy current products.json to products.backup1.json
-      const backup1Path = path.join(rootDir, "products.backup1.json");
-      fs.copyFileSync(databaseFile, backup1Path);
 
-      // Keep products.backup.json as the latest backup for automatic restore logic
-      const latestBackupPath = path.join(rootDir, "products.backup.json");
-      fs.copyFileSync(databaseFile, latestBackupPath);
-      console.log("Database backups rotated and saved.");
+      // Save as Backup #1
+      await supabase.from("backups").upsert({
+        id: 1,
+        products: mappedProds,
+        created_at: new Date().toISOString()
+      });
+      console.log("Cloud backups rotated successfully.");
+    } else {
+      if (fs.existsSync(databaseFile)) {
+        for (let i = 4; i >= 1; i--) {
+          const src = path.join(rootDir, `products.backup${i}.json`);
+          const dest = path.join(rootDir, `products.backup${i + 1}.json`);
+          if (fs.existsSync(src)) {
+            fs.copyFileSync(src, dest);
+          }
+        }
+        fs.copyFileSync(databaseFile, path.join(rootDir, "products.backup1.json"));
+        fs.copyFileSync(databaseFile, path.join(rootDir, "products.backup.json"));
+        console.log("Local backups rotated successfully.");
+      }
     }
   } catch (err) {
     console.error("Failed to create database backup:", err);
   }
 };
 
-const restoreDatabase = (index?: number) => {
+const restoreDatabase = async (index?: number) => {
   try {
-    let backupPath = path.join(rootDir, "products.backup.json");
-    if (index && index >= 1 && index <= 5) {
-      backupPath = path.join(rootDir, `products.backup${index}.json`);
-    }
-    if (fs.existsSync(backupPath)) {
-      fs.copyFileSync(backupPath, databaseFile);
-      console.log(`Database restored from backup: ${backupPath}`);
+    if (supabase) {
+      const backupIndex = index && index >= 1 && index <= 5 ? index : 1;
+      const { data, error } = await supabase
+        .from("backups")
+        .select("products")
+        .eq("id", backupIndex)
+        .single();
+
+      if (error || !data || !Array.isArray(data.products)) {
+        console.error(`Backup not found at index #${backupIndex}`);
+        return false;
+      }
+
+      // Wipe active catalog and insert backup items
+      const { error: deleteErr } = await supabase.from("products").delete().neq("id", "");
+      if (deleteErr) throw deleteErr;
+
+      const dbProds = data.products.map(mapProductToDbProduct);
+      if (dbProds.length > 0) {
+        const { error: insertErr } = await supabase.from("products").insert(dbProds);
+        if (insertErr) throw insertErr;
+      }
+      console.log(`Database restored from Cloud Backup #${backupIndex}`);
       return true;
+    } else {
+      let backupPath = path.join(rootDir, "products.backup.json");
+      if (index && index >= 1 && index <= 5) {
+        backupPath = path.join(rootDir, `products.backup${index}.json`);
+      }
+      if (fs.existsSync(backupPath)) {
+        fs.copyFileSync(backupPath, databaseFile);
+        console.log(`Database restored from local file backup: ${backupPath}`);
+        return true;
+      }
     }
   } catch (err) {
     console.error("Failed to restore database from backup:", err);
@@ -313,10 +405,7 @@ const restoreDatabase = (index?: number) => {
 
 // Heuristic similarity logic to prevent incorrect merges (needs to be above 90% weighted score)
 const computeSimilarity = (p1: any, p2: any): number => {
-  // Category check is mandatory
   if (p1.category !== p2.category) return 0;
-
-  // Exact ID match or exact Cover Image match is 100%
   if (p1.id && p2.id && p1.id === p2.id) return 1.0;
   if (p1.image && p2.image && p1.image === p2.image) return 1.0;
 
@@ -324,11 +413,9 @@ const computeSimilarity = (p1: any, p2: any): number => {
     return (str || "").toLowerCase().replace(/[^a-z0-9]/g, "").trim();
   };
 
-  // Exact string match on name or title is 100%
   if (normalizeString(p1.name) === normalizeString(p2.name)) return 1.0;
   if (normalizeString(p1.title) === normalizeString(p2.title)) return 1.0;
 
-  // Calculate token-based similarity and attribute matching
   const getTokens = (str: string) => {
     if (!str) return [];
     return str.toLowerCase()
@@ -380,14 +467,164 @@ const computeSimilarity = (p1: any, p2: any): number => {
   return score;
 };
 
-// CREATE Product in JSON
-app.post("/api/products", requireSessionWithCsrf, (req, res) => {
-  backupDatabase();
+// ==========================================
+// ADMIN AUTHENTICATION & SESSION ENDPOINTS
+// ==========================================
+
+app.post("/api/admin/login", async (req, res) => {
+  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  const ipStr = Array.isArray(ip) ? ip[0] : ip;
+
+  // Rate limiter check
+  const attempts = loginAttempts.get(ipStr);
+  if (attempts && attempts.lockUntil && attempts.lockUntil > Date.now()) {
+    const remainingTime = Math.ceil((attempts.lockUntil - Date.now()) / 1000);
+    return res.status(429).json({ error: `Too many login attempts. Please try again in ${remainingTime} seconds.` });
+  }
+
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: "Password is required" });
+  }
+
+  const securePassword = process.env.ADMIN_PASSWORD;
+
+  if (password === securePassword) {
+    // Reset rate limiter on success
+    loginAttempts.delete(ipStr);
+
+    // Regenerate session identifier
+    const sessionId = crypto.randomBytes(32).toString("hex");
+    const csrfToken = crypto.randomBytes(32).toString("hex");
+    await sessionStore.create(sessionId, csrfToken);
+
+    const isProd = process.env.NODE_ENV === "production";
+    let cookieStr = `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
+    if (isProd) {
+      cookieStr += "; Secure";
+    }
+    res.setHeader("Set-Cookie", cookieStr);
+
+    return res.json({ success: true, csrfToken });
+  } else {
+    // Record failed attempt
+    const current = attempts || { count: 0 };
+    current.count += 1;
+    if (current.count >= 5) {
+      current.lockUntil = Date.now() + 60 * 1000; // 60 seconds lockout
+    }
+    loginAttempts.set(ipStr, current);
+
+    // Return generic error message
+    return res.status(401).json({ error: "Invalid credentials." });
+  }
+});
+
+app.post("/api/admin/logout", async (req, res) => {
+  const sessionId = getSessionFromRequest(req);
+  if (sessionId) {
+    await sessionStore.delete(sessionId);
+  }
+  // Clear cookie
+  res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+  res.json({ success: true });
+});
+
+app.get("/api/admin/check-session", async (req, res) => {
+  const sessionId = getSessionFromRequest(req);
+  if (!sessionId) {
+    return res.json({ authenticated: false });
+  }
+  const session = await sessionStore.get(sessionId);
+  if (!session) {
+    return res.json({ authenticated: false });
+  }
+  res.json({ authenticated: true, csrfToken: session.csrfToken });
+});
+
+// API retrieve products
+app.get("/api/products", async (req, res) => {
   try {
-    const data = fs.readFileSync(databaseFile, "utf8");
-    const products = JSON.parse(data);
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      const mapped = (data || []).map(mapDbProductToProduct);
+      res.json(mapped);
+    } else {
+      const data = fs.readFileSync(databaseFile, "utf8");
+      res.json(JSON.parse(data));
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to read products database", details: err?.message });
+  }
+});
+
+// API retrieve CMS settings
+app.get("/api/cms", async (req, res) => {
+  try {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("cms_settings")
+        .select("settings")
+        .eq("key", "default")
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error; // PGRST116 is single row missing
+
+      if (data && data.settings) {
+        res.json(data.settings);
+      } else {
+        res.json(getDefaultCms());
+      }
+    } else {
+      const data = fs.readFileSync(cmsFile, "utf8");
+      res.json(JSON.parse(data));
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to read CMS settings", details: err?.message });
+  }
+});
+
+// API save CMS settings
+app.post("/api/cms", requireSessionWithCsrf, async (req, res) => {
+  try {
+    const cmsData = req.body;
+    if (supabase) {
+      const { error } = await supabase
+        .from("cms_settings")
+        .upsert({ key: "default", settings: cmsData, updated_at: new Date().toISOString() });
+
+      if (error) throw error;
+      res.json({ success: true, data: cmsData });
+    } else {
+      fs.writeFileSync(cmsFile, JSON.stringify(cmsData, null, 2), "utf8");
+      res.json({ success: true, data: cmsData });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to save CMS settings", details: err?.message });
+  }
+});
+
+// CREATE / UPDATE Product
+app.post("/api/products", requireSessionWithCsrf, async (req, res) => {
+  await backupDatabase();
+  try {
     const newProduct = req.body;
-    
+    let products: any[] = [];
+
+    if (supabase) {
+      const { data, error } = await supabase.from("products").select("*");
+      if (error) throw error;
+      products = (data || []).map(mapDbProductToProduct);
+    } else {
+      const data = fs.readFileSync(databaseFile, "utf8");
+      products = JSON.parse(data);
+    }
+
     // Check if same product exists using similarity score >= 90%
     let idx = -1;
     for (let i = 0; i < products.length; i++) {
@@ -396,7 +633,8 @@ app.post("/api/products", requireSessionWithCsrf, (req, res) => {
         break;
       }
     }
-    
+
+    let finalProduct: any;
     if (idx !== -1) {
       const existing = products[idx];
       const existingImgs = existing.images || (existing.image ? [existing.image] : []);
@@ -407,18 +645,18 @@ app.post("/api/products", requireSessionWithCsrf, (req, res) => {
       const newGall = newProduct.galleryImages || (newProduct.image ? [newProduct.image] : []);
       const mergedGall = Array.from(new Set([...existingGall, ...newGall]));
 
-      products[idx] = {
+      finalProduct = {
         ...existing,
         ...newProduct,
         id: existing.id, // KEEP original ID
-        createdAt: existing.createdAt || newProduct.createdAt || new Date().toISOString(), // NEVER modify createdAt
+        createdAt: existing.createdAt || newProduct.createdAt || new Date().toISOString(), // KEEP original createdAt
         lastModified: new Date().toISOString(), // ALWAYS update lastModified
         images: mergedImgs,
         galleryImages: mergedGall
       };
       
       if (mergedImgs.length > 0) {
-        products[idx].image = mergedImgs[0];
+        finalProduct.image = mergedImgs[0];
       }
     } else {
       if (!newProduct.id) {
@@ -432,21 +670,33 @@ app.post("/api/products", requireSessionWithCsrf, (req, res) => {
       newProduct.images = newImgs;
       newProduct.galleryImages = newGall;
       
-      products.push(newProduct);
+      finalProduct = newProduct;
     }
-    
-    fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
-    res.status(201).json(idx !== -1 ? products[idx] : products[products.length - 1]);
+
+    if (supabase) {
+      const dbProd = mapProductToDbProduct(finalProduct);
+      const { error } = await supabase.from("products").upsert(dbProd);
+      if (error) throw error;
+    } else {
+      if (idx !== -1) {
+        products[idx] = finalProduct;
+      } else {
+        products.push(finalProduct);
+      }
+      fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
+    }
+
+    res.status(201).json(finalProduct);
   } catch (err: any) {
-    restoreDatabase();
+    await restoreDatabase();
     res.status(500).json({ error: "Failed to save product", details: err?.message });
   }
 });
 
 // Explicit backup endpoint
-app.post("/api/products/backup", requireSessionWithCsrf, (req, res) => {
+app.post("/api/products/backup", requireSessionWithCsrf, async (req, res) => {
   try {
-    backupDatabase();
+    await backupDatabase();
     res.json({ success: true, message: "Backup created successfully." });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to backup database", details: err?.message });
@@ -454,13 +704,13 @@ app.post("/api/products/backup", requireSessionWithCsrf, (req, res) => {
 });
 
 // Explicit restore endpoint
-app.post("/api/products/restore", requireSessionWithCsrf, (req, res) => {
+app.post("/api/products/restore", requireSessionWithCsrf, async (req, res) => {
   try {
     const { index } = req.body;
-    if (restoreDatabase(index)) {
+    if (await restoreDatabase(index)) {
       res.json({ success: true, message: `Database restored successfully from backup ${index || "latest"}.` });
     } else {
-      res.status(400).json({ error: `No backup file exists to restore for index: ${index || "latest"}.` });
+      res.status(400).json({ error: `No backup exists to restore for index: ${index || "latest"}.` });
     }
   } catch (err: any) {
     res.status(500).json({ error: "Failed to restore database", details: err?.message });
@@ -468,20 +718,28 @@ app.post("/api/products/restore", requireSessionWithCsrf, (req, res) => {
 });
 
 // Bulk overwrite / save lists (Appends/updates only, never deletes)
-app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
-  backupDatabase();
+app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
+  await backupDatabase();
   try {
     const list = req.body;
     if (!Array.isArray(list)) {
-      restoreDatabase();
+      await restoreDatabase();
       return res.status(400).json({ error: "Payload must be a JSON array of products" });
     }
 
-    const currentData = fs.readFileSync(databaseFile, "utf8");
-    const productsList = JSON.parse(currentData);
+    let productsList: any[] = [];
+    if (supabase) {
+      const { data, error } = await supabase.from("products").select("*");
+      if (error) throw error;
+      productsList = (data || []).map(mapDbProductToProduct);
+    } else {
+      const currentData = fs.readFileSync(databaseFile, "utf8");
+      productsList = JSON.parse(currentData);
+    }
+
+    const modifiedOrAddedDbProducts: any[] = [];
 
     list.forEach((newProd: any) => {
-      // Match by similarity >= 90%
       let idx = -1;
       for (let i = 0; i < productsList.length; i++) {
         if (computeSimilarity(productsList[i], newProd) >= 0.90) {
@@ -490,6 +748,7 @@ app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
         }
       }
 
+      let finalProduct: any;
       if (idx !== -1) {
         const existing = productsList[idx];
         const existingImgs = existing.images || (existing.image ? [existing.image] : []);
@@ -500,7 +759,7 @@ app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
         const newGall = newProd.galleryImages || (newProd.image ? [newProd.image] : []);
         const mergedGall = Array.from(new Set([...existingGall, ...newGall]));
 
-        productsList[idx] = {
+        finalProduct = {
           ...existing,
           ...newProd,
           id: existing.id, // KEEP original ID
@@ -511,8 +770,10 @@ app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
         };
         
         if (mergedImgs.length > 0) {
-          productsList[idx].image = mergedImgs[0];
+          finalProduct.image = mergedImgs[0];
         }
+
+        productsList[idx] = finalProduct;
       } else {
         if (!newProd.id) {
           newProd.id = "prod_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
@@ -525,14 +786,27 @@ app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
         newProd.images = newImgs;
         newProd.galleryImages = newGall;
 
-        productsList.push(newProd);
+        finalProduct = newProd;
+        productsList.push(finalProduct);
+      }
+
+      if (supabase) {
+        modifiedOrAddedDbProducts.push(mapProductToDbProduct(finalProduct));
       }
     });
 
-    fs.writeFileSync(databaseFile, JSON.stringify(productsList, null, 2), "utf8");
+    if (supabase) {
+      if (modifiedOrAddedDbProducts.length > 0) {
+        const { error } = await supabase.from("products").upsert(modifiedOrAddedDbProducts);
+        if (error) throw error;
+      }
+    } else {
+      fs.writeFileSync(databaseFile, JSON.stringify(productsList, null, 2), "utf8");
+    }
+
     res.json({ success: true, count: productsList.length });
   } catch (err: any) {
-    restoreDatabase();
+    await restoreDatabase();
     res.status(500).json({ error: "Failed to save products in bulk", details: err?.message });
   }
 });
@@ -541,9 +815,7 @@ app.post("/api/products/bulk", requireSessionWithCsrf, (req, res) => {
 app.post("/api/analyze-images", requireSessionWithCsrf, async (req, res) => {
   try {
     console.log("=== API ANALYZE IMAGES REACHED ===");
-    console.log("GEMINI_API_KEY from env:", process.env.GEMINI_API_KEY ? "EXISTS (length " + process.env.GEMINI_API_KEY.length + ")" : "MISSING");
     const { files } = req.body;
-    console.log("Files received count:", files?.length);
     if (!Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: "No files provided for analysis" });
     }
@@ -644,7 +916,6 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
           console.warn(`Model ${modelName} failed:`, e?.message || e);
           attempts--;
           if (attempts > 0) {
-            // Wait 1.5 seconds before retrying
             await new Promise(resolve => setTimeout(resolve, 1500));
           }
         }
@@ -666,107 +937,174 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
   }
 });
 
-// Delete Product (Moves deleted products to deletedProducts.json, never deletes permanently)
-app.post("/api/products/delete", requireSessionWithCsrf, (req, res) => {
-  backupDatabase();
+// Delete Product (Moves deleted products to database Safety Bin, never deletes permanently)
+app.post("/api/products/delete", requireSessionWithCsrf, async (req, res) => {
+  await backupDatabase();
   try {
     const { id, ids } = req.body;
     if (!id && (!ids || !Array.isArray(ids))) {
-      restoreDatabase();
+      await restoreDatabase();
       return res.status(400).json({ error: "ID or IDs array is required" });
     }
 
-    const data = fs.readFileSync(databaseFile, "utf8");
-    let products = JSON.parse(data);
+    const targetsToDelete = ids ? ids : [id];
+    let productsToMove: any[] = [];
 
-    let deletedProducts: any[] = [];
-    if (fs.existsSync(deletedDatabaseFile)) {
-      try {
-        const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
-        deletedProducts = JSON.parse(delData);
-      } catch (e) {
-        deletedProducts = [];
-      }
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", targetsToDelete);
+
+      if (error) throw error;
+      productsToMove = (data || []).map(mapDbProductToProduct);
+    } else {
+      const data = fs.readFileSync(databaseFile, "utf8");
+      const products = JSON.parse(data);
+      productsToMove = products.filter((p: any) => targetsToDelete.includes(p.id));
     }
 
-    const targetsToDelete = ids ? ids : [id];
-    const productsToMove = products.filter((p: any) => targetsToDelete.includes(p.id));
+    if (productsToMove.length === 0) {
+      return res.json({ success: true, deletedCount: 0 });
+    }
 
-    productsToMove.forEach((p: any) => {
-      const existsIdx = deletedProducts.findIndex((dp: any) => dp.id === p.id);
-      if (existsIdx === -1) {
-        deletedProducts.push({
-          ...p,
-          deletedAt: new Date().toISOString()
-        });
+    if (supabase) {
+      const deletedDbRecords = productsToMove.map(p => {
+        const dbProd = mapProductToDbProduct(p);
+        return {
+          ...dbProd,
+          deleted_at: new Date().toISOString()
+        };
+      });
+
+      // Upsert into deleted_products
+      const { error: insertError } = await supabase.from("deleted_products").upsert(deletedDbRecords);
+      if (insertError) throw insertError;
+
+      // Delete from active products
+      const { error: deleteError } = await supabase.from("products").delete().in("id", targetsToDelete);
+      if (deleteError) throw deleteError;
+    } else {
+      let deletedProducts: any[] = [];
+      if (fs.existsSync(deletedDatabaseFile)) {
+        try {
+          const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
+          deletedProducts = JSON.parse(delData);
+        } catch (e) {
+          deletedProducts = [];
+        }
       }
-    });
 
-    fs.writeFileSync(deletedDatabaseFile, JSON.stringify(deletedProducts, null, 2), "utf8");
+      productsToMove.forEach((p: any) => {
+        const existsIdx = deletedProducts.findIndex((dp: any) => dp.id === p.id);
+        if (existsIdx === -1) {
+          deletedProducts.push({
+            ...p,
+            deletedAt: new Date().toISOString()
+          });
+        }
+      });
 
-    products = products.filter((p: any) => !targetsToDelete.includes(p.id));
-    fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
+      fs.writeFileSync(deletedDatabaseFile, JSON.stringify(deletedProducts, null, 2), "utf8");
+
+      const data = fs.readFileSync(databaseFile, "utf8");
+      let products = JSON.parse(data);
+      products = products.filter((p: any) => !targetsToDelete.includes(p.id));
+      fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
+    }
+
     res.json({ success: true, deletedCount: productsToMove.length });
   } catch (err: any) {
-    restoreDatabase();
+    await restoreDatabase();
     res.status(500).json({ error: "Failed to delete product", details: err?.message });
   }
 });
 
 // Get Deleted Products
-app.get("/api/products/deleted", requireSession, (req, res) => {
+app.get("/api/products/deleted", requireSession, async (req, res) => {
   try {
-    if (!fs.existsSync(deletedDatabaseFile)) {
-      return res.json([]);
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("deleted_products")
+        .select("*")
+        .order("deleted_at", { ascending: false });
+
+      if (error) throw error;
+      const mapped = (data || []).map(mapDbProductToProduct);
+      res.json(mapped);
+    } else {
+      if (!fs.existsSync(deletedDatabaseFile)) {
+        return res.json([]);
+      }
+      const data = fs.readFileSync(deletedDatabaseFile, "utf8");
+      res.json(JSON.parse(data));
     }
-    const data = fs.readFileSync(deletedDatabaseFile, "utf8");
-    res.json(JSON.parse(data));
   } catch (err: any) {
     res.status(500).json({ error: "Failed to read deleted products database", details: err?.message });
   }
 });
 
 // Restore Deleted Product
-app.post("/api/products/restore-deleted", requireSessionWithCsrf, (req, res) => {
-  backupDatabase();
+app.post("/api/products/restore-deleted", requireSessionWithCsrf, async (req, res) => {
+  await backupDatabase();
   try {
     const { id } = req.body;
     if (!id) {
-      restoreDatabase();
+      await restoreDatabase();
       return res.status(400).json({ error: "Product ID is required" });
     }
 
-    if (!fs.existsSync(deletedDatabaseFile)) {
-      restoreDatabase();
-      return res.status(400).json({ error: "No deleted products exist to restore." });
+    let productToRestore: any = null;
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("deleted_products")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      productToRestore = mapDbProductToProduct(data);
+    } else {
+      if (!fs.existsSync(deletedDatabaseFile)) {
+        await restoreDatabase();
+        return res.status(400).json({ error: "No deleted products exist to restore." });
+      }
+      const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
+      const deletedProducts = JSON.parse(delData);
+      const matchIdx = deletedProducts.findIndex((p: any) => p.id === id);
+      if (matchIdx !== -1) {
+        productToRestore = deletedProducts[matchIdx];
+      }
     }
 
-    const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
-    let deletedProducts = JSON.parse(delData);
-
-    const matchIdx = deletedProducts.findIndex((p: any) => p.id === id);
-    if (matchIdx === -1) {
-      restoreDatabase();
+    if (!productToRestore) {
+      await restoreDatabase();
       return res.status(404).json({ error: "Product not found in deleted products list." });
     }
 
-    const productToRestore = deletedProducts[matchIdx];
     delete productToRestore.deletedAt;
 
-    const data = fs.readFileSync(databaseFile, "utf8");
-    const products = JSON.parse(data);
+    let activeProducts: any[] = [];
+    if (supabase) {
+      const { data, error } = await supabase.from("products").select("*");
+      if (error) throw error;
+      activeProducts = (data || []).map(mapDbProductToProduct);
+    } else {
+      const data = fs.readFileSync(databaseFile, "utf8");
+      activeProducts = JSON.parse(data);
+    }
 
-    // Merge or append back into active catalog using similarity
     let idx = -1;
-    for (let i = 0; i < products.length; i++) {
-      if (computeSimilarity(products[i], productToRestore) >= 0.90) {
+    for (let i = 0; i < activeProducts.length; i++) {
+      if (computeSimilarity(activeProducts[i], productToRestore) >= 0.90) {
         idx = i;
         break;
       }
     }
 
+    let finalProduct: any;
     if (idx !== -1) {
-      const existing = products[idx];
+      const existing = activeProducts[idx];
       const existingImgs = existing.images || (existing.image ? [existing.image] : []);
       const restoreImgs = productToRestore.images || (productToRestore.image ? [productToRestore.image] : []);
       const mergedImgs = Array.from(new Set([...existingImgs, ...restoreImgs]));
@@ -775,7 +1113,7 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, (req, res) => 
       const restoreGall = productToRestore.galleryImages || (productToRestore.image ? [productToRestore.image] : []);
       const mergedGall = Array.from(new Set([...existingGall, ...restoreGall]));
 
-      products[idx] = {
+      finalProduct = {
         ...existing,
         ...productToRestore,
         id: existing.id,
@@ -785,58 +1123,96 @@ app.post("/api/products/restore-deleted", requireSessionWithCsrf, (req, res) => 
       };
     } else {
       productToRestore.lastModified = new Date().toISOString();
-      products.push(productToRestore);
+      finalProduct = productToRestore;
     }
 
-    fs.writeFileSync(databaseFile, JSON.stringify(products, null, 2), "utf8");
+    if (supabase) {
+      const { error: activeError } = await supabase.from("products").upsert(mapProductToDbProduct(finalProduct));
+      if (activeError) throw activeError;
 
-    deletedProducts.splice(matchIdx, 1);
-    fs.writeFileSync(deletedDatabaseFile, JSON.stringify(deletedProducts, null, 2), "utf8");
+      const { error: delError } = await supabase.from("deleted_products").delete().eq("id", id);
+      if (delError) throw delError;
+    } else {
+      if (idx !== -1) {
+        activeProducts[idx] = finalProduct;
+      } else {
+        activeProducts.push(finalProduct);
+      }
+      fs.writeFileSync(databaseFile, JSON.stringify(activeProducts, null, 2), "utf8");
 
-    res.json({ success: true, restoredProduct: productToRestore });
+      const delData = fs.readFileSync(deletedDatabaseFile, "utf8");
+      const deletedProducts = JSON.parse(delData);
+      const updatedDel = deletedProducts.filter((p: any) => p.id !== id);
+      fs.writeFileSync(deletedDatabaseFile, JSON.stringify(updatedDel, null, 2), "utf8");
+    }
+
+    res.json({ success: true, restoredProduct: finalProduct });
   } catch (err: any) {
-    restoreDatabase();
+    await restoreDatabase();
     res.status(500).json({ error: "Failed to restore deleted product", details: err?.message });
   }
 });
 
-// Reset server database (Wipe catalog - backup first just in case)
-app.post("/api/products/reset", requireSessionWithCsrf, (req, res) => {
-  backupDatabase();
+// Reset database (Wipe catalog)
+app.post("/api/products/reset", requireSessionWithCsrf, async (req, res) => {
+  await backupDatabase();
   try {
-    fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
-    res.json({ success: true, count: 0 });
+    if (supabase) {
+      const { error } = await supabase.from("products").delete().neq("id", "");
+      if (error) throw error;
+      res.json({ success: true, count: 0 });
+    } else {
+      fs.writeFileSync(databaseFile, JSON.stringify([], null, 2), "utf8");
+      res.json({ success: true, count: 0 });
+    }
   } catch (err: any) {
-    restoreDatabase();
+    await restoreDatabase();
     res.status(500).json({ error: "Failed to reset products list", details: err?.message });
   }
 });
 
-// Endpoint to verify physical file existence and stats on disk for strict compliance evidence
-app.get("/api/check-file", (req, res) => {
+// Endpoint to verify physical file existence inside Storage/disk
+app.get("/api/check-file", async (req, res) => {
   try {
     const relativePath = req.query.path as string;
     if (!relativePath) {
       return res.status(400).json({ exists: false, error: "Path query parameter is required" });
     }
-    // Only verify files under /public to protect system integrity
-    const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
-    const absolutePath = path.join(publicDir, normalized.replace(/^\/?public\/?/, ""));
-    const exists = fs.existsSync(absolutePath);
-    const stats = exists ? fs.statSync(absolutePath) : null;
-    res.json({
-      exists,
-      absolutePath,
-      size: stats ? stats.size : 0,
-      createdAt: stats ? stats.mtime : null
-    });
+
+    if (supabase) {
+      const filename = path.basename(relativePath);
+      const { data, error } = await supabase.storage.from("products").list("", {
+        search: filename
+      });
+
+      const exists = !error && data && data.some(f => f.name === filename);
+      const match = exists ? data.find(f => f.name === filename) : null;
+
+      res.json({
+        exists,
+        absolutePath: relativePath,
+        size: match && match.metadata ? (match.metadata as any).size : 0,
+        createdAt: match ? match.created_at : null
+      });
+    } else {
+      const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
+      const absolutePath = path.join(publicDir, normalized.replace(/^\/?public\/?/, ""));
+      const exists = fs.existsSync(absolutePath);
+      const stats = exists ? fs.statSync(absolutePath) : null;
+      res.json({
+        exists,
+        absolutePath,
+        size: stats ? stats.size : 0,
+        createdAt: stats ? stats.mtime : null
+      });
+    }
   } catch (err: any) {
     res.status(500).json({ exists: false, error: err?.message });
   }
 });
 
 // Upload endpoint that accepts file details and base64
-app.post("/api/upload", requireSessionWithCsrf, (req, res) => {
+app.post("/api/upload", requireSessionWithCsrf, async (req, res) => {
   try {
     const { name, base64 } = req.body;
     if (!name || !base64) {
@@ -846,7 +1222,9 @@ app.post("/api/upload", requireSessionWithCsrf, (req, res) => {
     // Clean base64 string
     const matches = base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     let dataBuffer: Buffer;
+    let mimeType = "image/png";
     if (matches && matches.length === 3) {
+      mimeType = matches[1];
       dataBuffer = Buffer.from(matches[2], "base64");
     } else {
       dataBuffer = Buffer.from(base64, "base64");
@@ -858,20 +1236,56 @@ app.post("/api/upload", requireSessionWithCsrf, (req, res) => {
     
     // Create unique filename
     const finalName = `${base}-${Date.now()}${ext}`;
-    const targetPath = path.join(productsDir, finalName);
 
-    // Save image to the disk
-    fs.writeFileSync(targetPath, dataBuffer);
+    if (supabase) {
+      const { error } = await supabase.storage
+        .from("products")
+        .upload(finalName, dataBuffer, {
+          contentType: mimeType,
+          upsert: true
+        });
 
-    // Return relative URL that points to /public/products/finalName
-    const publicUrl = `/public/products/${finalName}`;
-    res.json({ url: publicUrl, name: finalName });
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(finalName);
+
+      res.json({ url: publicUrlData.publicUrl, name: finalName });
+    } else {
+      const targetPath = path.join(productsDir, finalName);
+      fs.writeFileSync(targetPath, dataBuffer);
+      const publicUrl = `/public/products/${finalName}`;
+      res.json({ url: publicUrl, name: finalName });
+    }
   } catch (err: any) {
     res.status(500).json({ error: "Failed to upload file", details: err?.message });
   }
 });
 
 async function startServer() {
+  if (process.env.VERCEL === "1") {
+    console.log("Running in Vercel Serverless environment. Not binding port listener.");
+    
+    // Seed default CMS settings dynamically on boot if connected to Supabase and missing
+    if (supabase) {
+      try {
+        const { data } = await supabase.from("cms_settings").select("key").eq("key", "default").single();
+        if (!data) {
+          await supabase.from("cms_settings").insert({
+            key: "default",
+            settings: getDefaultCms(),
+            updated_at: new Date().toISOString()
+          });
+          console.log("Seeded default CMS settings in Supabase.");
+        }
+      } catch (err) {
+        console.error("Could not seed default CMS settings in Supabase:", err);
+      }
+    }
+    return;
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -892,3 +1306,5 @@ async function startServer() {
 }
 
 startServer();
+
+export default app;
