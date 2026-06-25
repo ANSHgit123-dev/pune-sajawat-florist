@@ -22,6 +22,7 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
 // Supabase Configuration & Client Initialization
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+console.log("SERVICE ROLE KEY START:", supabaseServiceKey?.substring(0, 20));
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false }
 });
@@ -125,13 +126,13 @@ const requireSessionWithCsrf = async (req: express.Request, res: express.Respons
     if (!session) {
       return res.status(401).json({ error: "Unauthorized. Invalid or expired session." });
     }
-    
+
     // CSRF verification: Check the custom request header
     const csrfToken = req.headers["x-csrf-token"];
     if (!csrfToken || csrfToken !== session.csrfToken) {
       return res.status(403).json({ error: "Forbidden. Invalid or missing CSRF token." });
     }
-    
+
     next();
   } catch (err) {
     next(err);
@@ -340,7 +341,7 @@ const computeSimilarity = (p1: any, p2: any): number => {
 
   const tokens1 = getTokens(p1.name || p1.title || "");
   const tokens2 = getTokens(p2.name || p2.title || "");
-  
+
   if (tokens1.length === 0 || tokens2.length === 0) return 0;
 
   const t2Set = new Set(tokens2);
@@ -360,8 +361,8 @@ const computeSimilarity = (p1: any, p2: any): number => {
   const getSetSimilarity = (kwSet: string[]) => {
     const attrs1 = extractKeywords(p1, kwSet);
     const attrs2 = extractKeywords(p2, kwSet);
-    if (attrs1.length === 0 && attrs2.length === 0) return 1.0; 
-    if (attrs1.length === 0 || attrs2.length === 0) return 0.0; 
+    if (attrs1.length === 0 && attrs2.length === 0) return 1.0;
+    if (attrs1.length === 0 || attrs2.length === 0) return 0.0;
     const intersection = attrs1.filter(a => attrs2.includes(a));
     const union = Array.from(new Set([...attrs1, ...attrs2]));
     return intersection.length / union.length;
@@ -542,7 +543,7 @@ app.post("/api/products", requireSessionWithCsrf, async (req, res) => {
         images: mergedImgs,
         galleryImages: mergedGall
       };
-      
+
       if (mergedImgs.length > 0) {
         finalProduct.image = mergedImgs[0];
       }
@@ -552,12 +553,12 @@ app.post("/api/products", requireSessionWithCsrf, async (req, res) => {
       }
       newProduct.createdAt = new Date().toISOString();
       newProduct.lastModified = new Date().toISOString();
-      
+
       const newImgs = newProduct.images || (newProduct.image ? [newProduct.image] : []);
       const newGall = newProduct.galleryImages || (newProduct.image ? [newProduct.image] : []);
       newProduct.images = newImgs;
       newProduct.galleryImages = newGall;
-      
+
       finalProduct = newProduct;
     }
 
@@ -642,7 +643,7 @@ app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
           images: mergedImgs,
           galleryImages: mergedGall
         };
-        
+
         if (mergedImgs.length > 0) {
           finalProduct.image = mergedImgs[0];
         }
@@ -654,7 +655,7 @@ app.post("/api/products/bulk", requireSessionWithCsrf, async (req, res) => {
         }
         newProd.createdAt = new Date().toISOString();
         newProd.lastModified = new Date().toISOString();
-        
+
         const newImgs = newProd.images || (newProd.image ? [newProd.image] : []);
         const newGall = newProd.galleryImages || (newProd.image ? [newProd.image] : []);
         newProd.images = newImgs;
@@ -743,13 +744,13 @@ Return ONLY a pure JSON array. No markdown formatting blocks or surrounding text
     for (const f of files) {
       let rawBase64 = f.base64;
       let mimeType = f.mimeType || "image/jpeg";
-      
+
       const matches = f.base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       if (matches && matches.length === 3) {
         mimeType = matches[1];
         rawBase64 = matches[2];
       }
-      
+
       contents.push(`Image original name: ${f.originalName}`);
       contents.push({
         inlineData: {
@@ -1010,7 +1011,7 @@ app.post("/api/upload", requireSessionWithCsrf, async (req, res) => {
     // Sanitize filename to prevent directory traversal or bad characters
     const ext = path.extname(name) || ".png";
     const base = path.basename(name, ext).replace(/[^a-zA-Z0-9.\-_]/g, "_").toLowerCase();
-    
+
     // Create unique filename
     const finalName = `${base}-${Date.now()}${ext}`;
 
