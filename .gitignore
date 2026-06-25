@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Database backups and temp files
+products.backup*.json
+products.before_*.json
+products.before_manual_merge.images.backup/
+deletedProducts.json
+deleted_images/
+merge_report.json

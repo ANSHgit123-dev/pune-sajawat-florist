@@ -1,0 +1,56 @@
+{
+  "sections": [
+    {
+      "id": "rose-bouquets",
+      "name": "Rose Bouquets",
+      "displayOrder": 1,
+      "bannerImage": "/public/products/media__1782144641595.jpg",
+      "hidden": false,
+      "isFeatured": true
+    },
+    {
+      "id": "bouquets",
+      "name": "Bouquets",
+      "displayOrder": 2,
+      "bannerImage": "/public/products/media__1782144641349.jpg",
+      "hidden": false,
+      "isFeatured": true
+    },
+    {
+      "id": "anniversary-bouquets",
+      "name": "Anniversary Bouquets",
+      "displayOrder": 3,
+      "bannerImage": "/public/products/media__1782144641061.jpg",
+      "hidden": false,
+      "isFeatured": true
+    },
+    {
+      "id": "gift-hampers",
+      "name": "Gift Hampers",
+      "displayOrder": 4,
+      "bannerImage": "/public/products/media__1782144641863.jpg",
+      "hidden": false,
+      "isFeatured": true
+    }
+  ],
+  "homepage": {
+    "sectionOrder": [
+      "rose-bouquets",
+      "bouquets",
+      "anniversary-bouquets",
+      "gift-hampers"
+    ],
+    "featuredProductIds": [
+      "prod_anniversary_balloon_roses",
+      "prod_heart_shape_peach_roses",
+      "prod_baby_girl_balloon_basket"
+    ],
+    "trendingProductIds": [
+      "prod_mixed_carnations_lilies",
+      "prod_anthurium_blue_chrysanthemum"
+    ],
+    "bannerProductIds": [
+      "prod_anniversary_balloon_roses"
+    ]
+  }
+}
