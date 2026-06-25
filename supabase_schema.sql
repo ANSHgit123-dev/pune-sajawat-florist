@@ -107,3 +107,19 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 -- Enable RLS (no public policies exist, keeping admin sessions private to service_role)
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+
+-- 6. Grant explicit privileges to service_role (required if default schema privileges are restricted)
+GRANT USAGE ON SCHEMA public TO service_role, anon, authenticated;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
+GRANT ALL PRIVILEGES ON TABLE products TO service_role;
+GRANT ALL PRIVILEGES ON TABLE deleted_products TO service_role;
+GRANT ALL PRIVILEGES ON TABLE cms_settings TO service_role;
+GRANT ALL PRIVILEGES ON TABLE backups TO service_role;
+GRANT ALL PRIVILEGES ON TABLE sessions TO service_role;
+
+-- Grant SELECT privileges to public roles (anon and authenticated) for read-only tables
+GRANT SELECT ON TABLE products TO anon, authenticated;
+GRANT SELECT ON TABLE cms_settings TO anon, authenticated;
+
+

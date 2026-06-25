@@ -59,6 +59,29 @@ function mapProductToDbProduct(product) {
 async function runMigration() {
   console.log("=== STARTING SUPABASE MIGRATION ===");
 
+  // 0. Ensure Storage Bucket exists
+  console.log("\n0. Ensuring public Storage Bucket 'products' exists...");
+  const { data: buckets, error: bucketsErr } = await supabase.storage.listBuckets();
+  if (bucketsErr) {
+    console.warn("Could not check/list storage buckets:", bucketsErr.message);
+  } else {
+    const exists = buckets.some(b => b.name === "products");
+    if (!exists) {
+      console.log("Bucket 'products' does not exist. Creating public 'products' bucket...");
+      const { error: createErr } = await supabase.storage.createBucket("products", {
+        public: true
+      });
+      if (createErr) {
+        console.error("ERROR: Failed to automatically create 'products' bucket:", createErr.message);
+        console.error("Please create it manually as PUBLIC in your Supabase dashboard.");
+        process.exit(1);
+      }
+      console.log("Bucket 'products' created successfully!");
+    } else {
+      console.log("Bucket 'products' already exists.");
+    }
+  }
+
   // 1. Upload Local Images to Supabase Storage
   console.log("\n1. Uploading local images to Supabase Storage...");
   const imageUrlMap = new Map(); // local path -> Supabase public URL
