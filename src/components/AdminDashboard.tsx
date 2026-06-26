@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Lock, 
-  Search, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  User, 
-  FileText, 
-  TrendingUp, 
-  Package, 
-  CheckCircle, 
-  XCircle, 
-  LogOut, 
-  AlertCircle, 
-  Filter, 
+import {
+  Lock,
+  Search,
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  User,
+  FileText,
+  TrendingUp,
+  Package,
+  CheckCircle,
+  XCircle,
+  LogOut,
+  AlertCircle,
+  Filter,
   ArrowLeft,
   DollarSign,
   Plus,
@@ -30,12 +30,12 @@ import {
   Sparkles
 } from "lucide-react";
 import { Order, Product } from "../types";
-import { 
-  getDeliverySettings, 
-  saveDeliverySettings, 
-  DeliverySettings, 
-  DeliveryAreaConfig, 
-  DeliveryTypeConfig 
+import {
+  getDeliverySettings,
+  saveDeliverySettings,
+  DeliverySettings,
+  DeliveryAreaConfig,
+  DeliveryTypeConfig
 } from "../utils/deliverySettings";
 import CatalogManager from "./CatalogManager";
 import MediaManager from "./MediaManager";
@@ -49,13 +49,13 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [password, setPassword] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loginError, setLoginError] = useState("");
-  
+
   // Tab selector State
   const [adminTab, setAdminTab] = useState<"orders" | "settings" | "catalog" | "catalog_manager" | "backups" | "media_manager">("orders");
 
   // Load products list for Catalog Manager CMS
   const [products, setProducts] = useState<Product[]>([]);
-  
+
   const loadProducts = async () => {
     try {
       const res = await fetch("/api/products");
@@ -70,7 +70,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   // Backups and safety states
   const [deletedProducts, setDeletedProducts] = useState<Product[]>([]);
-  
+
   const loadDeletedProducts = async () => {
     try {
       const res = await fetch("/api/products/deleted");
@@ -89,7 +89,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
       const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/restore", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-CSRF-Token": csrfToken
         },
@@ -114,7 +114,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
       const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/restore-deleted", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-CSRF-Token": csrfToken
         },
@@ -146,7 +146,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   // Dynamic Settings States
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettings>({ areas: [], types: [] });
-  
+
   // New Area Form State
   const [newAreaName, setNewAreaName] = useState("");
   const [newAreaPostcode, setNewAreaPostcode] = useState("");
@@ -158,7 +158,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   const [customImageUrl, setCustomImageUrl] = useState("");
   const [customImageCategory, setCustomImageCategory] = useState<"bouquet" | "cake" | "decoration" | "gift">("bouquet");
-  
+
   const [builderStep, setBuilderStep] = useState<"upload" | "processing" | "duplicates" | "done">("upload");
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingMessage, setProcessingMessage] = useState("");
@@ -396,10 +396,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
     // Save to localStorage
     localStorage.setItem("sajawat_catalog_products", JSON.stringify(finalProducts));
-    
+
     // Set step to done
     setBuilderStep("done");
-    
+
     // Dispatch custom event to notify main app window
     window.dispatchEvent(new Event("sajawat_catalog_updated"));
 
@@ -673,7 +673,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const filteredOrders = orders.filter(order => {
     // Search filter
     const lowerSearch = searchTerm.trim().toLowerCase();
-    const searchMatch = 
+    const searchMatch =
       searchTerm === "" ||
       order.id.toLowerCase().includes(lowerSearch) ||
       order.customerName.toLowerCase().includes(lowerSearch) ||
@@ -714,7 +714,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
           <div className="absolute top-0 right-0 w-48 h-48 bg-rose-600/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#82862F]/5 rounded-full blur-3xl pointer-events-none" />
 
-          <button 
+          <button
             onClick={onBack}
             className="flex items-center gap-1 text-xs text-stone-400 hover:text-white transition-colors cursor-pointer uppercase tracking-widest font-black mb-6"
             id="back-to-shop-btn"
@@ -771,7 +771,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   return (
     <div className="flex-1 bg-stone-50/40 p-4 sm:p-6 lg:p-8 font-sans" id="admin-main-dashboard">
       <div className="max-w-[1600px] mx-auto space-y-6">
-        
+
         {/* TOP META CONTROLS BRAND BAR */}
         <div className="flex flex-col md:flex-row justify-between items-center bg-white border border-stone-200/60 rounded-2xl p-4 sm:p-5 gap-4 shadow-xs" id="admin-top-brand-bar">
           <div className="flex items-center gap-3">
@@ -786,8 +786,8 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
           <div className="flex items-center gap-2.5">
             <span className="text-xs text-stone-400 font-mono hidden sm:inline">Active Session: <strong>Superadmin</strong></span>
-            
-            <button 
+
+            <button
               onClick={onBack}
               className="px-4 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest cursor-pointer transition-colors"
             >
@@ -810,66 +810,60 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 bg-white border border-stone-200/80 p-1.5 rounded-2xl shadow-xs gap-1.5" id="admin-crm-control-tabs">
           <button
             onClick={() => setAdminTab("orders")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "orders"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "orders"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-orders"
           >
             📋 Master Orders CRM
           </button>
           <button
             onClick={() => setAdminTab("catalog_manager")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "catalog_manager"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "catalog_manager"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-catalog-manager"
           >
             🗂️ Catalog Manager
           </button>
           <button
             onClick={() => setAdminTab("media_manager")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "media_manager"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "media_manager"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-media-manager"
           >
             🖼️ Media Manager
           </button>
           <button
             onClick={() => setAdminTab("settings")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "settings"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "settings"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-settings"
           >
             ⚙️ Delivery Settings
           </button>
           <button
             onClick={() => setAdminTab("backups")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "backups"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "backups"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-backups"
           >
             🛡️ Safety & Backups
           </button>
           <button
             onClick={() => setAdminTab("catalog")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              adminTab === "catalog"
-                ? "bg-[#82862F] text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-            }`}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "catalog"
+              ? "bg-[#82862F] text-white shadow-sm"
+              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+              }`}
             id="tab-btn-catalog"
           >
             📸 Auto-Catalog Builder
@@ -916,384 +910,381 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         {adminTab === "orders" && (
           <>
             {/* ANALYTICS BENTO BOX QUICK GRID */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4" id="admin-bento-metrics">
-          <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
-            <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Pending</span>
-            <div className="flex justify-between items-baseline">
-              <span className="text-2xl font-black text-amber-650 font-mono">{pendingCount}</span>
-              <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded">Actionable</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
-            <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Preparing</span>
-            <div className="flex justify-between items-baseline">
-              <span className="text-2xl font-black text-blue-650 font-mono">{preparingCount}</span>
-              <span className="text-[9px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded">Active</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
-            <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Delivered</span>
-            <div className="flex justify-between items-baseline">
-              <span className="text-2xl font-black text-emerald-650 font-mono">{deliveredCount}</span>
-              <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Completed</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
-            <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Cancelled</span>
-            <div className="flex justify-between items-baseline">
-              <span className="text-2xl font-black text-stone-400 font-mono">{cancelledCount}</span>
-              <span className="text-[9px] bg-stone-50 text-stone-500 font-bold px-1.5 py-0.5 rounded">Dismissed</span>
-            </div>
-          </div>
-
-          <div className="col-span-2 md:col-span-1 bg-[#82862F]/10 border border-[#82862F]/20 p-4 rounded-xl shadow-xs space-y-1.5">
-            <span className="text-[10px] text-stone-500 uppercase tracking-widest font-extrabold block">Pune Revenue</span>
-            <div className="flex justify-between items-baseline">
-              <span className="text-xl font-mono font-black text-stone-900">₹{totalIncomingAmt}</span>
-              <span className="text-[8.5px] text-stone-500 font-bold">Total Confirmed</span>
-            </div>
-          </div>
-        </div>
-
-        {/* COMBINED INTERACTIVE WRAPPER */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* LEFT SIDEBAR: UPCOMING DELIVERIES PANELS */}
-          <div className="lg:col-span-4 bg-white border border-stone-200/60 rounded-2xl p-4 sm:p-5 shadow-xs space-y-5" id="upcoming-deliveries-panel">
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#82862F] font-serif border-b border-stone-100 pb-2">📅 Upcoming Deliveries</h3>
-              <p className="text-[11px] text-stone-400 leading-normal mt-1">Real-time scheduling for kitchen & floral arrangements prep.</p>
-            </div>
-
-            {/* SECTIONS */}
-            <div className="space-y-4">
-              {/* Today Deliveries */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
-                  <span className="text-[10px] font-extrabold uppercase text-amber-800 tracking-wider">Deliver Today</span>
-                  <span className="font-mono text-[10px] font-bold text-amber-800">{upcomingToday.length} Orders</span>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4" id="admin-bento-metrics">
+              <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
+                <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Pending</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-2xl font-black text-amber-650 font-mono">{pendingCount}</span>
+                  <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded">Actionable</span>
                 </div>
-                {upcomingToday.length === 0 ? (
-                  <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">None for today.</p>
-                ) : (
-                  <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                    {upcomingToday.map(o => (
-                      <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg flex justify-between items-center text-[10.5px] font-sans">
-                        <div className="min-w-0 pr-1">
-                          <strong className="text-stone-800 block truncate">{o.customerName}</strong>
-                          <span className="text-[9.5px] text-stone-400 block truncate font-mono">{o.id} • {o.deliveryTime}</span>
-                        </div>
-                        <span className="text-[10px] shrink-0 font-bold text-amber-600 uppercase bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded font-sans">{o.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              {/* Tomorrow Deliveries */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center bg-blue-500/10 px-2.5 py-1.5 rounded-lg border border-blue-500/20">
-                  <span className="text-[10px] font-extrabold uppercase text-blue-800 tracking-wider">Delivery Tomorrow</span>
-                  <span className="font-mono text-[10px] font-bold text-blue-800">{upcomingTomorrow.length} Orders</span>
+              <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
+                <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Preparing</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-2xl font-black text-blue-650 font-mono">{preparingCount}</span>
+                  <span className="text-[9px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded">Active</span>
                 </div>
-                {upcomingTomorrow.length === 0 ? (
-                  <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">None scheduled.</p>
-                ) : (
-                  <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                    {upcomingTomorrow.map(o => (
-                      <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg flex justify-between items-center text-[10.5px] font-sans">
-                        <div className="min-w-0 pr-1">
-                          <strong className="text-stone-800 block truncate">{o.customerName}</strong>
-                          <span className="text-[9.5px] text-stone-400 block truncate font-mono">{o.id} • {o.deliveryTime}</span>
-                        </div>
-                        <span className="text-[10px] shrink-0 font-bold text-stone-505 uppercase bg-stone-100 px-1.5 py-0.5 rounded font-sans">PENDING</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              {/* Later This Week */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center bg-indigo-500/10 px-2.5 py-1.5 rounded-lg border border-indigo-500/20">
-                  <span className="text-[10px] font-extrabold uppercase text-indigo-805 tracking-wider">This Week (Later)</span>
-                  <span className="font-mono text-[10px] font-bold text-indigo-805">{upcomingWeek.length} Orders</span>
+              <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
+                <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Delivered</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-2xl font-black text-emerald-650 font-mono">{deliveredCount}</span>
+                  <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Completed</span>
                 </div>
-                {upcomingWeek.length === 0 ? (
-                  <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">No other weekly slots reserved yet.</p>
-                ) : (
-                  <div className="space-y-1.5 max-h-[150px] overflow-y-auto pr-1">
-                    {upcomingWeek.sort((a,b)=>a.deliveryDate.localeCompare(b.deliveryDate)).map(o => (
-                      <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg relative flex flex-col gap-1 text-[10.5px] font-sans">
-                        <div className="flex justify-between items-center">
-                          <strong className="text-stone-800 block truncate">{o.customerName}</strong>
-                          <span className="text-[10px] font-mono font-black text-rose-500 bg-rose-50 px-1 py-0.5 rounded">{o.deliveryDate}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[9.5px] text-stone-500">
-                          <span className="truncate">{o.id} • {o.deliveryTime}</span>
-                          <span className="uppercase text-[8.5px] tracking-wide font-extrabold text-stone-500">{o.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-3 bg-stone-900 text-stone-100 rounded-xl relative overflow-hidden text-center justify-center flex flex-col space-y-1 font-sans">
-              <span className="text-[9px] uppercase tracking-widest text-[#82862F] font-bold">Pune Sajawat Support Hotline</span>
-              <p className="text-[11px] text-stone-300 font-bold">Need tech support or DB manual override?</p>
-              <a href="tel:918484905722" className="text-[11.5px] text-emerald-400 font-bold hover:underline block pt-1">Call +91 8484905722</a>
-            </div>
-          </div>
-
-          {/* RIGHT VIEW: CORE MASTER ORDER TABLE CONTROLLER WITH METRICS & SEARCH */}
-          <div className="lg:col-span-8 bg-white border border-stone-200/60 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4" id="main-order-tracker">
-            
-            {/* SEARCH AND FILTER HEAD CONTROLS */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-stone-100">
-              <div className="relative flex-1 max-w-sm">
-                <input
-                  type="text"
-                  placeholder="Search customer, location, order ID or flowers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full text-xs rounded-lg border border-stone-200 bg-white pl-8 pr-4 py-2 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#82862F]"
-                  id="dashboard-search-input"
-                />
-                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-stone-400" />
               </div>
 
-              {/* SLICK MOBILE SCROLLABLE TAB CHIPS FOR INSTANT FILTERS */}
-              <div className="flex gap-1 overflow-x-auto pb-1 max-w-full no-scrollbar select-none font-sans shrink-0">
-                {(["All", "Today", "Tomorrow", "Upcoming", "Delivered", "Cancelled"] as const).map((filter) => {
-                  const isActive = activeFilter === filter;
-                  return (
-                    <button
-                      key={filter}
-                      onClick={() => setActiveFilter(filter)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-[#82862F] text-white font-black"
-                          : "bg-stone-50 hover:bg-stone-100 text-stone-500 border border-stone-100"
-                      }`}
-                    >
-                      {filter}
-                    </button>
-                  );
-                })}
+              <div className="bg-white border border-stone-200/60 p-4 rounded-xl shadow-xs space-y-1.5">
+                <span className="text-[10px] text-stone-400 uppercase tracking-widest font-extrabold block">Cancelled</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-2xl font-black text-stone-400 font-mono">{cancelledCount}</span>
+                  <span className="text-[9px] bg-stone-50 text-stone-500 font-bold px-1.5 py-0.5 rounded">Dismissed</span>
+                </div>
+              </div>
+
+              <div className="col-span-2 md:col-span-1 bg-[#82862F]/10 border border-[#82862F]/20 p-4 rounded-xl shadow-xs space-y-1.5">
+                <span className="text-[10px] text-stone-500 uppercase tracking-widest font-extrabold block">Pune Revenue</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xl font-mono font-black text-stone-900">₹{totalIncomingAmt}</span>
+                  <span className="text-[8.5px] text-stone-500 font-bold">Total Confirmed</span>
+                </div>
               </div>
             </div>
 
-            {/* RESULTS METRIC COUNTER */}
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-400">
-              <span>Displaying {filteredOrders.length} filtered register receipts</span>
-              {searchTerm && (
-                <button onClick={() => setSearchTerm("")} className="text-rose-600 hover:underline">
-                  Clear Search Filter
-                </button>
-              )}
-            </div>
+            {/* COMBINED INTERACTIVE WRAPPER */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            {/* MAIN CRM TABLE DISPLAY */}
-            {filteredOrders.length === 0 ? (
-              <div className="py-20 text-center space-y-3 bg-stone-50 rounded-xl border border-dashed border-stone-200/85">
-                <Package className="w-10 h-10 text-stone-300 mx-auto animate-pulse" />
+              {/* LEFT SIDEBAR: UPCOMING DELIVERIES PANELS */}
+              <div className="lg:col-span-4 bg-white border border-stone-200/60 rounded-2xl p-4 sm:p-5 shadow-xs space-y-5" id="upcoming-deliveries-panel">
                 <div>
-                  <h4 className="font-bold text-stone-700 text-sm">No Matching Orders Found</h4>
-                  <p className="text-[11px] text-stone-400 mt-1">Try resetting the filter chips or refine your search input term!</p>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-[#82862F] font-serif border-b border-stone-100 pb-2">📅 Upcoming Deliveries</h3>
+                  <p className="text-[11px] text-stone-400 leading-normal mt-1">Real-time scheduling for kitchen & floral arrangements prep.</p>
+                </div>
+
+                {/* SECTIONS */}
+                <div className="space-y-4">
+                  {/* Today Deliveries */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                      <span className="text-[10px] font-extrabold uppercase text-amber-800 tracking-wider">Deliver Today</span>
+                      <span className="font-mono text-[10px] font-bold text-amber-800">{upcomingToday.length} Orders</span>
+                    </div>
+                    {upcomingToday.length === 0 ? (
+                      <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">None for today.</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                        {upcomingToday.map(o => (
+                          <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg flex justify-between items-center text-[10.5px] font-sans">
+                            <div className="min-w-0 pr-1">
+                              <strong className="text-stone-800 block truncate">{o.customerName}</strong>
+                              <span className="text-[9.5px] text-stone-400 block truncate font-mono">{o.id} • {o.deliveryTime}</span>
+                            </div>
+                            <span className="text-[10px] shrink-0 font-bold text-amber-600 uppercase bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded font-sans">{o.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tomorrow Deliveries */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center bg-blue-500/10 px-2.5 py-1.5 rounded-lg border border-blue-500/20">
+                      <span className="text-[10px] font-extrabold uppercase text-blue-800 tracking-wider">Delivery Tomorrow</span>
+                      <span className="font-mono text-[10px] font-bold text-blue-800">{upcomingTomorrow.length} Orders</span>
+                    </div>
+                    {upcomingTomorrow.length === 0 ? (
+                      <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">None scheduled.</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                        {upcomingTomorrow.map(o => (
+                          <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg flex justify-between items-center text-[10.5px] font-sans">
+                            <div className="min-w-0 pr-1">
+                              <strong className="text-stone-800 block truncate">{o.customerName}</strong>
+                              <span className="text-[9.5px] text-stone-400 block truncate font-mono">{o.id} • {o.deliveryTime}</span>
+                            </div>
+                            <span className="text-[10px] shrink-0 font-bold text-stone-505 uppercase bg-stone-100 px-1.5 py-0.5 rounded font-sans">PENDING</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Later This Week */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center bg-indigo-500/10 px-2.5 py-1.5 rounded-lg border border-indigo-500/20">
+                      <span className="text-[10px] font-extrabold uppercase text-indigo-805 tracking-wider">This Week (Later)</span>
+                      <span className="font-mono text-[10px] font-bold text-indigo-805">{upcomingWeek.length} Orders</span>
+                    </div>
+                    {upcomingWeek.length === 0 ? (
+                      <p className="text-[10.5px] text-stone-400 italic pl-1.5 font-medium">No other weekly slots reserved yet.</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-[150px] overflow-y-auto pr-1">
+                        {upcomingWeek.sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate)).map(o => (
+                          <div key={o.id} className="p-2 border border-stone-100 bg-stone-50/50 rounded-lg relative flex flex-col gap-1 text-[10.5px] font-sans">
+                            <div className="flex justify-between items-center">
+                              <strong className="text-stone-800 block truncate">{o.customerName}</strong>
+                              <span className="text-[10px] font-mono font-black text-rose-500 bg-rose-50 px-1 py-0.5 rounded">{o.deliveryDate}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-[9.5px] text-stone-500">
+                              <span className="truncate">{o.id} • {o.deliveryTime}</span>
+                              <span className="uppercase text-[8.5px] tracking-wide font-extrabold text-stone-500">{o.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-stone-900 text-stone-100 rounded-xl relative overflow-hidden text-center justify-center flex flex-col space-y-1 font-sans">
+                  <span className="text-[9px] uppercase tracking-widest text-[#82862F] font-bold">Pune Sajawat Support Hotline</span>
+                  <p className="text-[11px] text-stone-300 font-bold">Need tech support or DB manual override?</p>
+                  <a href="tel:918484905722" className="text-[11.5px] text-emerald-400 font-bold hover:underline block pt-1">Call +91 8484905722</a>
                 </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto border border-stone-150 rounded-xl bg-stone-50/15 max-h-[700px] overflow-y-auto">
-                <table className="w-full text-left border-collapse font-sans text-xs">
-                  <thead className="bg-stone-50 text-stone-500 text-[10.5px] uppercase font-semibold tracking-wider sticky top-0 z-10 border-b border-stone-200/80">
-                    <tr>
-                      <th className="p-3">Order ID</th>
-                      <th className="p-3">Recipient Details</th>
-                      <th className="p-3">Flowers & Addons</th>
-                      <th className="p-3">Slot Info</th>
-                      <th className="p-3">Personal Message</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100 bg-white">
-                    {filteredOrders.map((order) => {
-                      const isTodayTag = order.deliveryDate === todayStr;
-                      const isTomorrowTag = order.deliveryDate === tomorrowStr;
 
+              {/* RIGHT VIEW: CORE MASTER ORDER TABLE CONTROLLER WITH METRICS & SEARCH */}
+              <div className="lg:col-span-8 bg-white border border-stone-200/60 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4" id="main-order-tracker">
+
+                {/* SEARCH AND FILTER HEAD CONTROLS */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+                  <div className="relative flex-1 max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Search customer, location, order ID or flowers..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full text-xs rounded-lg border border-stone-200 bg-white pl-8 pr-4 py-2 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#82862F]"
+                      id="dashboard-search-input"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-stone-400" />
+                  </div>
+
+                  {/* SLICK MOBILE SCROLLABLE TAB CHIPS FOR INSTANT FILTERS */}
+                  <div className="flex gap-1 overflow-x-auto pb-1 max-w-full no-scrollbar select-none font-sans shrink-0">
+                    {(["All", "Today", "Tomorrow", "Upcoming", "Delivered", "Cancelled"] as const).map((filter) => {
+                      const isActive = activeFilter === filter;
                       return (
-                        <tr 
-                          key={order.id} 
-                          className="hover:bg-stone-50/50 transition-colors"
-                          id={`dashboard-row-${order.id}`}
+                        <button
+                          key={filter}
+                          onClick={() => setActiveFilter(filter)}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${isActive
+                            ? "bg-[#82862F] text-white font-black"
+                            : "bg-stone-50 hover:bg-stone-100 text-stone-500 border border-stone-100"
+                            }`}
                         >
-                          {/* Order ID */}
-                          <td className="p-3 whitespace-nowrap align-top">
-                            <span className="font-mono font-extrabold text-stone-950 text-sm block">
-                              {order.id}
-                            </span>
-                            <span className="text-[9px] text-stone-400 block font-normal leading-normal">
-                              {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <strong className="text-[#82862F] font-mono text-xs block mt-1">₹{order.price}</strong>
-                          </td>
-
-                          {/* Recipient Details */}
-                          <td className="p-3 align-top min-w-[200px]">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1">
-                                <User className="w-3 h-3 text-[#82862F]" />
-                                <span className="font-bold text-stone-903 text-[12px]">{order.customerName}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Phone className="w-3 h-3 text-stone-400" />
-                                <a href={`tel:${order.phoneNumber}`} className="text-stone-500 hover:underline font-mono text-[10.5px]">
-                                  {order.phoneNumber}
-                                </a>
-                              </div>
-                              <div className="flex items-start gap-1 text-stone-400 mt-1 max-w-[220px]">
-                                <MapPin className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
-                                <span className="text-[10px] text-stone-500 leading-normal">{order.address}</span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Flowers & Addons cataloged */}
-                          <td className="p-3 align-top min-w-[160px]">
-                            <div className="space-y-1">
-                              {order.products.map((p, idx) => (
-                                <div key={idx} className="flex items-center justify-between text-[11px] text-stone-800">
-                                  <span>💐 {p.title} <strong className="font-bold text-stone-500">x{p.quantity}</strong></span>
-                                </div>
-                              ))}
-                              {order.addons && order.addons.length > 0 && (
-                                <div className="pt-1 mt-1 border-t border-stone-100 text-[10px] text-[#82862F] space-y-0.5">
-                                  <span className="font-semibold block uppercase tracking-wide text-[8.5px]">Add-ons:</span>
-                                  {order.addons.map((a, idx) => (
-                                    <div key={idx} className="flex justify-between items-center">
-                                      <span>🍫 {a.name} x{a.quantity}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* Delivery Slot info */}
-                          <td className="p-3 align-top whitespace-nowrap">
-                            <div className="space-y-1.5">
-                              <span className="text-[11px] font-bold text-stone-800 block">
-                                {order.deliveryDate}
-                              </span>
-                              
-                              {/* Tomorrow / Today Urgent Notices */}
-                              {isTodayTag && order.status !== "Delivered" && order.status !== "Cancelled" && (
-                                <span className="text-[8.5px] bg-amber-50 text-amber-700 border border-amber-200 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase block w-max">
-                                  Deliver Today
-                                </span>
-                              )}
-                              {isTomorrowTag && order.status !== "Delivered" && order.status !== "Cancelled" && (
-                                <span className="text-[8.5px] bg-sky-50 text-sky-700 border border-sky-200 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase block w-max">
-                                  Delivery Tomorrow
-                                </span>
-                              )}
-
-                              <span className="text-[10px] text-stone-500 font-medium block">
-                                ⏱️ {order.deliveryTime}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Personal card message */}
-                          <td className="p-3 align-top max-w-[180px]">
-                            <div className="p-2 bg-rose-50/30 border border-rose-100/60 rounded-lg italic text-[11px] text-stone-750 font-sans leading-normal">
-                              {order.personalMessage ? `"${order.personalMessage}"` : "None"}
-                            </div>
-                          </td>
-
-                          {/* Order Status Badge */}
-                          <td className="p-3 align-top whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              order.status === "Pending" ? "bg-stone-100 text-stone-600 border border-stone-200" :
-                              order.status === "Preparing" ? "bg-blue-50 text-blue-600 border border-blue-200" :
-                              order.status === "Delivered" ? "bg-emerald-50 text-emerald-600 border border-emerald-250" :
-                              "bg-rose-50 text-rose-600 border border-rose-200"
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                order.status === "Pending" ? "bg-stone-500" :
-                                order.status === "Preparing" ? "bg-blue-500" :
-                                order.status === "Delivered" ? "bg-emerald-500 animate-pulse" :
-                                "bg-rose-500"
-                              }`} />
-                              {order.status}
-                            </span>
-                          </td>
-
-                          {/* ACTION SWITCHERS */}
-                          <td className="p-3 align-top text-right">
-                            <div className="flex flex-col gap-1 w-max ml-auto">
-                              {order.status !== "Pending" && (
-                                <button
-                                  onClick={() => updateOrderStatus(order.id, "Pending")}
-                                  className="px-2 py-1 text-[9px] font-bold bg-white hover:bg-stone-100 border border-stone-200 hover:border-stone-400 text-stone-750 rounded transition-all cursor-pointer text-center"
-                                  id={`btn-pending-${order.id}`}
-                                >
-                                  Mark Pending
-                                </button>
-                              )}
-                              
-                              {order.status !== "Preparing" && order.status !== "Delivered" && order.status !== "Cancelled" && (
-                                <button
-                                  onClick={() => updateOrderStatus(order.id, "Preparing")}
-                                  className="px-2 py-1 text-[9px] font-bold bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded transition-all cursor-pointer text-center"
-                                  id={`btn-preparing-${order.id}`}
-                                >
-                                  Mark Preparing
-                                </button>
-                              )}
-
-                              {order.status !== "Delivered" && order.status !== "Cancelled" && (
-                                <button
-                                  onClick={() => updateOrderStatus(order.id, "Delivered")}
-                                  className="px-2 py-1 text-[9px] font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-all cursor-pointer text-center"
-                                  id={`btn-delivered-${order.id}`}
-                                >
-                                  Mark Delivered
-                                </button>
-                              )}
-
-                              {order.status !== "Cancelled" && (
-                                <button
-                                  onClick={() => updateOrderStatus(order.id, "Cancelled")}
-                                  className="px-2 py-1 text-[9px] font-bold bg-rose-50 hover:bg-rose-100 border border-rose-250 text-rose-600 rounded transition-all cursor-pointer text-center"
-                                  id={`btn-cancel-${order.id}`}
-                                >
-                                  Cancel Order
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+                          {filter}
+                        </button>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+
+                {/* RESULTS METRIC COUNTER */}
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  <span>Displaying {filteredOrders.length} filtered register receipts</span>
+                  {searchTerm && (
+                    <button onClick={() => setSearchTerm("")} className="text-rose-600 hover:underline">
+                      Clear Search Filter
+                    </button>
+                  )}
+                </div>
+
+                {/* MAIN CRM TABLE DISPLAY */}
+                {filteredOrders.length === 0 ? (
+                  <div className="py-20 text-center space-y-3 bg-stone-50 rounded-xl border border-dashed border-stone-200/85">
+                    <Package className="w-10 h-10 text-stone-300 mx-auto animate-pulse" />
+                    <div>
+                      <h4 className="font-bold text-stone-700 text-sm">No Matching Orders Found</h4>
+                      <p className="text-[11px] text-stone-400 mt-1">Try resetting the filter chips or refine your search input term!</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-stone-150 rounded-xl bg-stone-50/15 max-h-[700px] overflow-y-auto">
+                    <table className="w-full text-left border-collapse font-sans text-xs">
+                      <thead className="bg-stone-50 text-stone-500 text-[10.5px] uppercase font-semibold tracking-wider sticky top-0 z-10 border-b border-stone-200/80">
+                        <tr>
+                          <th className="p-3">Order ID</th>
+                          <th className="p-3">Recipient Details</th>
+                          <th className="p-3">Flowers & Addons</th>
+                          <th className="p-3">Slot Info</th>
+                          <th className="p-3">Personal Message</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100 bg-white">
+                        {filteredOrders.map((order) => {
+                          const isTodayTag = order.deliveryDate === todayStr;
+                          const isTomorrowTag = order.deliveryDate === tomorrowStr;
+
+                          return (
+                            <tr
+                              key={order.id}
+                              className="hover:bg-stone-50/50 transition-colors"
+                              id={`dashboard-row-${order.id}`}
+                            >
+                              {/* Order ID */}
+                              <td className="p-3 whitespace-nowrap align-top">
+                                <span className="font-mono font-extrabold text-stone-950 text-sm block">
+                                  {order.id}
+                                </span>
+                                <span className="text-[9px] text-stone-400 block font-normal leading-normal">
+                                  {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                <strong className="text-[#82862F] font-mono text-xs block mt-1">₹{order.price}</strong>
+                              </td>
+
+                              {/* Recipient Details */}
+                              <td className="p-3 align-top min-w-[200px]">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1">
+                                    <User className="w-3 h-3 text-[#82862F]" />
+                                    <span className="font-bold text-stone-903 text-[12px]">{order.customerName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Phone className="w-3 h-3 text-stone-400" />
+                                    <a href={`tel:${order.phoneNumber}`} className="text-stone-500 hover:underline font-mono text-[10.5px]">
+                                      {order.phoneNumber}
+                                    </a>
+                                  </div>
+                                  <div className="flex items-start gap-1 text-stone-400 mt-1 max-w-[220px]">
+                                    <MapPin className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
+                                    <span className="text-[10px] text-stone-500 leading-normal">{order.address}</span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Flowers & Addons cataloged */}
+                              <td className="p-3 align-top min-w-[160px]">
+                                <div className="space-y-1">
+                                  {order.products.map((p, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-[11px] text-stone-800">
+                                      <span>💐 {p.title} <strong className="font-bold text-stone-500">x{p.quantity}</strong></span>
+                                    </div>
+                                  ))}
+                                  {order.addons && order.addons.length > 0 && (
+                                    <div className="pt-1 mt-1 border-t border-stone-100 text-[10px] text-[#82862F] space-y-0.5">
+                                      <span className="font-semibold block uppercase tracking-wide text-[8.5px]">Add-ons:</span>
+                                      {order.addons.map((a, idx) => (
+                                        <div key={idx} className="flex justify-between items-center">
+                                          <span>🍫 {a.name} x{a.quantity}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Delivery Slot info */}
+                              <td className="p-3 align-top whitespace-nowrap">
+                                <div className="space-y-1.5">
+                                  <span className="text-[11px] font-bold text-stone-800 block">
+                                    {order.deliveryDate}
+                                  </span>
+
+                                  {/* Tomorrow / Today Urgent Notices */}
+                                  {isTodayTag && order.status !== "Delivered" && order.status !== "Cancelled" && (
+                                    <span className="text-[8.5px] bg-amber-50 text-amber-700 border border-amber-200 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase block w-max">
+                                      Deliver Today
+                                    </span>
+                                  )}
+                                  {isTomorrowTag && order.status !== "Delivered" && order.status !== "Cancelled" && (
+                                    <span className="text-[8.5px] bg-sky-50 text-sky-700 border border-sky-200 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase block w-max">
+                                      Delivery Tomorrow
+                                    </span>
+                                  )}
+
+                                  <span className="text-[10px] text-stone-500 font-medium block">
+                                    ⏱️ {order.deliveryTime}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Personal card message */}
+                              <td className="p-3 align-top max-w-[180px]">
+                                <div className="p-2 bg-rose-50/30 border border-rose-100/60 rounded-lg italic text-[11px] text-stone-750 font-sans leading-normal">
+                                  {order.personalMessage ? `"${order.personalMessage}"` : "None"}
+                                </div>
+                              </td>
+
+                              {/* Order Status Badge */}
+                              <td className="p-3 align-top whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === "Pending" ? "bg-stone-100 text-stone-600 border border-stone-200" :
+                                  order.status === "Preparing" ? "bg-blue-50 text-blue-600 border border-blue-200" :
+                                    order.status === "Delivered" ? "bg-emerald-50 text-emerald-600 border border-emerald-250" :
+                                      "bg-rose-50 text-rose-600 border border-rose-200"
+                                  }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${order.status === "Pending" ? "bg-stone-500" :
+                                    order.status === "Preparing" ? "bg-blue-500" :
+                                      order.status === "Delivered" ? "bg-emerald-500 animate-pulse" :
+                                        "bg-rose-500"
+                                    }`} />
+                                  {order.status}
+                                </span>
+                              </td>
+
+                              {/* ACTION SWITCHERS */}
+                              <td className="p-3 align-top text-right">
+                                <div className="flex flex-col gap-1 w-max ml-auto">
+                                  {order.status !== "Pending" && (
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, "Pending")}
+                                      className="px-2 py-1 text-[9px] font-bold bg-white hover:bg-stone-100 border border-stone-200 hover:border-stone-400 text-stone-750 rounded transition-all cursor-pointer text-center"
+                                      id={`btn-pending-${order.id}`}
+                                    >
+                                      Mark Pending
+                                    </button>
+                                  )}
+
+                                  {order.status !== "Preparing" && order.status !== "Delivered" && order.status !== "Cancelled" && (
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, "Preparing")}
+                                      className="px-2 py-1 text-[9px] font-bold bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded transition-all cursor-pointer text-center"
+                                      id={`btn-preparing-${order.id}`}
+                                    >
+                                      Mark Preparing
+                                    </button>
+                                  )}
+
+                                  {order.status !== "Delivered" && order.status !== "Cancelled" && (
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, "Delivered")}
+                                      className="px-2 py-1 text-[9px] font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-all cursor-pointer text-center"
+                                      id={`btn-delivered-${order.id}`}
+                                    >
+                                      Mark Delivered
+                                    </button>
+                                  )}
+
+                                  {order.status !== "Cancelled" && (
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, "Cancelled")}
+                                      className="px-2 py-1 text-[9px] font-bold bg-rose-50 hover:bg-rose-100 border border-rose-250 text-rose-600 rounded transition-all cursor-pointer text-center"
+                                      id={`btn-cancel-${order.id}`}
+                                    >
+                                      Cancel Order
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      </>
-    )}
+            </div>
+          </>
+        )}
 
         {adminTab === "settings" && (
           <div className="space-y-6" id="admin-settings-section">
             <div className="bg-white border border-stone-200/60 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
-              
+
               {/* STATUS ACTION SUCCESS POPUP */}
               {settingsSuccessMessage && (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center justify-between font-sans animate-fade-in shadow-xs">
@@ -1412,7 +1403,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                         <strong className="text-xs text-stone-850 block truncate font-bold">{area.name}</strong>
                         <span className="text-[9px] text-stone-400 font-mono block">PIN: {area.postcode || "Pune"}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1.5 shrink-0">
                         <div className="relative w-20">
                           <span className="absolute left-1.5 top-1 text-[10px] text-stone-400 font-mono font-bold">₹</span>
@@ -1447,7 +1438,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
         {adminTab === "catalog" && (
           <div className="bg-white border border-stone-250/90 rounded-3xl p-6 shadow-md space-y-6 font-sans">
-            
+
             {/* Header branding */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 pb-5 gap-3">
               <div>
@@ -1474,7 +1465,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
             {builderStep === "upload" && (
               <div className="space-y-6">
-                
+
                 {/* 1. Drag Drop Mock Slot */}
                 <div className="border-2 border-dashed border-stone-200 bg-stone-50/40 rounded-3xl p-8 text-center flex flex-col items-center justify-center space-y-3 hover:border-[#82862F]/40 transition-all group">
                   <div className="w-14 h-14 rounded-full bg-stone-100 text-stone-505 flex items-center justify-center group-hover:scale-110 duration-300">
@@ -1591,7 +1582,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
             {builderStep === "processing" && (
               <div className="py-12 px-6 flex flex-col items-center justify-center space-y-6">
-                
+
                 {/* Active scan image display */}
                 {pendingUploads[activeUploadIndex] ? (
                   <div className="w-60 h-60 border border-stone-250 rounded-3xl overflow-hidden relative shadow-2xl bg-stone-50">
@@ -1602,10 +1593,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                       className="w-full h-full object-cover grayscale-45"
                       referrerPolicy="no-referrer"
                     />
-                    
+
                     {/* Sliding Laser line overlay */}
                     <div className="absolute inset-x-0 w-full h-2 bg-gradient-to-r from-transparent via-[#82862F] to-transparent top-0 animate-slide-scan z-20 shadow-[0_0_15px_rgba(130,134,47,1)]" />
-                    
+
                     {/* Loading grid overlay showing cutouts */}
                     <div className="absolute bottom-3 left-3 right-3 bg-stone-900/80 backdrop-blur-xs p-2 rounded-xl border border-stone-700/50 z-30 flex items-center gap-2">
                       <RefreshCw className="w-3.5 h-3.5 text-stone-200 animate-spin" />
@@ -1627,7 +1618,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                     <span className="text-[10px] text-stone-450 uppercase tracking-widest font-mono font-bold leading-none">Catalog Alignment Pipeline</span>
                     <span className="text-sm font-black text-[#82862F] font-mono leading-none">{processingProgress}% Completed</span>
                   </div>
-                  
+
                   {/* Progress Line */}
                   <div className="w-full h-3 bg-stone-100 rounded-full overflow-hidden border border-stone-200/50">
                     <div
@@ -1648,7 +1639,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
             {builderStep === "duplicates" && (
               <div className="space-y-6">
-                
+
                 {/* Intro to duplication review */}
                 <div className="bg-amber-50/60 border border-amber-200/70 p-4 rounded-2xl flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -1664,7 +1655,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
                 {/* Group A: Red Roses cluster review */}
                 <div className="border border-stone-200 rounded-3xl p-5 space-y-4 shadow-xs bg-white">
-                  
+
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 pb-3 gap-2 select-none">
                     <div>
                       <h4 className="text-xs font-bold text-stone-800">🔴 Group 1: Crimson Red Roses Arrangement Cluster</h4>
@@ -1676,7 +1667,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                    
+
                     {/* Left: First Image Thumb */}
                     <div className="md:col-span-3 border border-stone-200 rounded-2xl p-2 text-center bg-stone-50/50 relative">
                       <div className="aspect-square rounded-xl overflow-hidden relative">
@@ -1716,7 +1707,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                     {/* Duplicates option selector */}
                     <div className="md:col-span-5 bg-stone-50 p-4 rounded-2xl border border-stone-200/60 text-left space-y-3">
                       <span className="text-[9px] text-[#82862F] font-black uppercase tracking-widest block select-none">Select Angle Strategy:</span>
-                      
+
                       <div className="space-y-2 font-sans font-medium text-stone-700 text-xs">
                         <label className="flex items-start gap-2 cursor-pointer">
                           <input
@@ -1772,7 +1763,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
                 {/* Group B: Wedding arch cluster review */}
                 <div className="border border-stone-200 rounded-3xl p-5 space-y-4 shadow-xs bg-white">
-                  
+
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 pb-3 gap-2 select-none">
                     <div>
                       <h4 className="text-xs font-bold text-stone-800">🎈 Group 2: Wedding Backdrop Arch & Stage Setup</h4>
@@ -1784,7 +1775,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                    
+
                     {/* Left: First Image Thumb */}
                     <div className="md:col-span-3 border border-stone-200 rounded-2xl p-2 text-center bg-stone-50/50 relative">
                       <div className="aspect-square rounded-xl overflow-hidden relative">
@@ -1823,7 +1814,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                     {/* Duplicates option selector */}
                     <div className="md:col-span-5 bg-stone-50 p-4 rounded-2xl border border-stone-200/60 text-left space-y-3">
                       <span className="text-[9px] text-[#82862F] font-black uppercase tracking-widest block select-none">Select Angle Strategy:</span>
-                      
+
                       <div className="space-y-2 font-sans font-medium text-stone-700 text-xs">
                         <label className="flex items-start gap-2 cursor-pointer">
                           <input
@@ -1949,7 +1940,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
             {/* Grid layout for Backups and Deleted Items */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
+
               {/* Backups Panel (Left, 5 cols) */}
               <div className="lg:col-span-5 space-y-4">
                 <h4 className="text-xs uppercase font-extrabold tracking-wider text-[#82862F] flex items-center gap-1.5">
@@ -1961,15 +1952,15 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
                 <div className="space-y-2.5">
                   {[1, 2, 3, 4, 5].map((idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className="p-4 border border-stone-200 rounded-2xl bg-stone-50/50 flex items-center justify-between hover:border-[#82862F]/30 transition-all shadow-xs"
                     >
                       <div>
                         <strong className="text-xs text-stone-855 block">Backup #{idx}</strong>
                         <span className="text-[8.5px] text-stone-400 font-mono">products.backup{idx}.json</span>
                       </div>
-                      
+
                       <button
                         onClick={() => handleRestoreBackup(idx)}
                         className="px-4 py-2 bg-stone-900 hover:bg-[#82862F] text-white text-[10px] uppercase font-bold tracking-wider rounded-lg transition-colors cursor-pointer shadow-sm shadow-stone-950/10 active:scale-95"
@@ -1997,15 +1988,15 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                 ) : (
                   <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
                     {deletedProducts.map((p) => (
-                      <div 
-                        key={p.id} 
+                      <div
+                        key={p.id}
                         className="p-3 border border-stone-200 rounded-2xl bg-white flex items-center justify-between gap-4 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <img 
-                            src={p.image} 
-                            alt={p.name} 
-                            className="w-10 h-10 rounded-xl object-cover bg-stone-50 border border-stone-150 shrink-0" 
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-10 h-10 rounded-xl object-cover bg-stone-50 border border-stone-150 shrink-0"
                             referrerPolicy="no-referrer"
                           />
                           <div className="min-w-0">
