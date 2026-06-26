@@ -460,13 +460,18 @@ app.post("/api/admin/logout", async (req, res) => {
 app.get("/api/admin/check-session", async (req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   const sessionId = getSessionFromRequest(req);
+  console.log("[Backend check-session] Session ID received:", sessionId);
   if (!sessionId) {
+    console.log("[Backend check-session] authenticated: false. Reason: No session ID cookie found in request.");
     return res.json({ authenticated: false });
   }
   const session = await sessionStore.get(sessionId);
+  console.log("[Backend check-session] Session found in database:", session ? "YES" : "NO");
   if (!session) {
+    console.log("[Backend check-session] authenticated: false. Reason: Session ID not found in database session store or expired.");
     return res.json({ authenticated: false });
   }
+  console.log("[Backend check-session] authenticated: true. Reason: Valid session ID found in database session store.");
   res.json({ authenticated: true, csrfToken: session.csrfToken });
 });
 
