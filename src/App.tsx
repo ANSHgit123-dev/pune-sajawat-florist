@@ -244,6 +244,7 @@ export default function App() {
 
   // 📸 Dynamic catalog state loaded from LocalStorage
   const [loadedProducts, setLoadedProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [cmsSettings, setCmsSettings] = useState<CmsSettings>({
     sections: [],
     homepage: {
@@ -325,9 +326,18 @@ export default function App() {
   };
 
   const loadProductsAndCmsAndMedia = async () => {
-    await loadProductsFromStorage();
-    await loadCmsSettings();
-    await loadMedia();
+    setIsLoadingProducts(true);
+    try {
+      await Promise.all([
+        loadProductsFromStorage(),
+        loadCmsSettings(),
+        loadMedia()
+      ]);
+    } catch (err) {
+      console.error("Error loading application data:", err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
   };
 
   useEffect(() => {
@@ -580,6 +590,32 @@ export default function App() {
     return (
       <div className="min-h-screen flex flex-col bg-stone-950" id="pune-sajawat-admin-upload-root">
         <InventoryUpload onBack={() => navigateTo("/")} onCatalogBuilt={(prods) => setLoadedProducts(prods)} />
+      </div>
+    );
+  }
+
+  if (isLoadingProducts) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans" id="app-loading-screen">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/80 shadow-xl space-y-6 flex flex-col items-center">
+          <img
+            src="/logo.png"
+            alt="Pune Sajawat Florist Logo"
+            className="h-[75px] w-auto object-contain bg-transparent border-none shadow-none"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="w-16 h-16 rounded-full bg-[#046142]/10 flex items-center justify-center text-[#046142] animate-pulse">
+            <Flower className="w-8 h-8 animate-spin-lazy text-[#046142]" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-stone-900 font-serif">Pune Sajawat Florist</h2>
+            <p className="text-xs text-stone-500 font-light">
+              Loading our fresh collection...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
