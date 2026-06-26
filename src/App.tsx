@@ -568,32 +568,6 @@ export default function App() {
   };
 
 
-  let activeProductPage: Product | null = null;
-  if (currentPath.startsWith("/product/")) {
-    const id = currentPath.replace("/product/", "");
-    activeProductPage = deduplicatedProducts.find((p) => p.id === id) || null;
-  }
-
-  if (currentPath === "/admin") {
-    return (
-      <div className="min-h-screen flex flex-col bg-stone-900" id="pune-sajawat-admin-root">
-        <AdminDashboard onBack={() => navigateTo("/")} />
-      </div>
-    );
-  }
-
-  if (currentPath === "/admin/upload") {
-    const isAuth = sessionStorage.getItem("sajawat_admin_auth") === "true";
-    if (!isAuth) {
-      return null;
-    }
-    return (
-      <div className="min-h-screen flex flex-col bg-stone-950" id="pune-sajawat-admin-upload-root">
-        <InventoryUpload onBack={() => navigateTo("/")} onCatalogBuilt={(prods) => setLoadedProducts(prods)} />
-      </div>
-    );
-  }
-
   if (isLoadingProducts) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans" id="app-loading-screen">
@@ -620,7 +594,33 @@ export default function App() {
     );
   }
 
-  if (deduplicatedProducts.length === 0) {
+  let activeProductPage: Product | null = null;
+  if (currentPath.startsWith("/product/")) {
+    const id = currentPath.replace("/product/", "");
+    activeProductPage = deduplicatedProducts.find((p) => p.id === id) || null;
+  }
+
+  if (currentPath === "/admin") {
+    return (
+      <div className="min-h-screen flex flex-col bg-stone-900" id="pune-sajawat-admin-root">
+        <AdminDashboard onBack={() => navigateTo("/")} />
+      </div>
+    );
+  }
+
+  if (currentPath === "/admin/upload") {
+    const isAuth = sessionStorage.getItem("sajawat_admin_auth") === "true";
+    if (!isAuth) {
+      return null;
+    }
+    return (
+      <div className="min-h-screen flex flex-col bg-stone-950" id="pune-sajawat-admin-upload-root">
+        <InventoryUpload onBack={() => navigateTo("/")} onCatalogBuilt={(prods) => setLoadedProducts(prods)} />
+      </div>
+    );
+  }
+
+  if (!isLoadingProducts && deduplicatedProducts.length === 0) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/80 shadow-xl space-y-5">
