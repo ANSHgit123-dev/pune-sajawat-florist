@@ -458,6 +458,7 @@ app.post("/api/admin/logout", async (req, res) => {
 });
 
 app.get("/api/admin/check-session", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   const sessionId = getSessionFromRequest(req);
   if (!sessionId) {
     return res.json({ authenticated: false });
