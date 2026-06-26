@@ -345,6 +345,17 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  // Redirect unauthenticated user from /admin/upload to /admin
+  useEffect(() => {
+    if (currentPath === "/admin/upload") {
+      const isAuth = sessionStorage.getItem("sajawat_admin_auth") === "true";
+      if (!isAuth) {
+        window.history.replaceState({}, "", "/admin");
+        setCurrentPath("/admin");
+      }
+    }
+  }, [currentPath]);
+
   // Synchronize category selection on path changes
   useEffect(() => {
     let matchedCat = ROUTE_TO_CAT_MAP[currentPath];
@@ -562,6 +573,10 @@ export default function App() {
   }
 
   if (currentPath === "/admin/upload") {
+    const isAuth = sessionStorage.getItem("sajawat_admin_auth") === "true";
+    if (!isAuth) {
+      return null;
+    }
     return (
       <div className="min-h-screen flex flex-col bg-stone-950" id="pune-sajawat-admin-upload-root">
         <InventoryUpload onBack={() => navigateTo("/")} onCatalogBuilt={(prods) => setLoadedProducts(prods)} />
