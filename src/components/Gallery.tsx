@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { GALLERY_ITEMS } from "../data";
 import { Image, Eye, X, MessageCircleIcon, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { MediaItem } from "../types";
 
-export default function Gallery() {
+interface GalleryProps {
+  galleryMedia?: MediaItem[];
+}
+
+export default function Gallery({ galleryMedia = [] }: GalleryProps) {
   const [activeTab, setActiveTab] = useState("All");
   const [selectedImage, setSelectedImage] = useState<{
     image: string;
@@ -11,11 +16,22 @@ export default function Gallery() {
     category: string;
   } | null>(null);
 
-  const filterTabs = ["All", "Bouquets", "Weddings", "Cars", "Birthdays"];
+  const isCustom = galleryMedia.length > 0;
+  const filterTabs = isCustom ? ["All", "Recent Setup"] : ["All", "Bouquets", "Weddings", "Cars", "Birthdays"];
+
+  const displayItems = isCustom
+    ? galleryMedia.map((m, idx) => ({
+        id: m.id || `custom_gall_${idx}`,
+        image: m.url,
+        title: m.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
+        category: "Recent Setup"
+      }))
+    : GALLERY_ITEMS;
 
   const filteredItems = activeTab === "All"
-    ? GALLERY_ITEMS
-    : GALLERY_ITEMS.filter(item => {
+    ? displayItems
+    : displayItems.filter(item => {
+        if (isCustom) return item.category === activeTab;
         if (activeTab === "Cars" && item.category === "Cars") return true;
         if (activeTab === "Weddings" && item.category === "Weddings") return true;
         if (activeTab === "Bouquets" && item.category === "Bouquets") return true;

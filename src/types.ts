@@ -140,3 +140,13 @@ export interface CmsSettings {
     bannerProductIds: string[];
   };
 }
+
+export interface MediaItem {
+  name: string;
+  id: string;
+  size: number;
+  createdAt: string;
+  mimeType: string;
+  url: string;
+}
+

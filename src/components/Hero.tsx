@@ -1,14 +1,25 @@
-import React from "react";
-import { MessageCircle, ShieldCheck, Clock, Flower } from "lucide-react";
-import { Product, CmsSettings } from "../types";
+import React, { useState, useEffect } from "react";
+import { MessageCircle, ShieldCheck, Clock, Flower, ChevronLeft, ChevronRight } from "lucide-react";
+import { Product, CmsSettings, MediaItem } from "../types";
 
 interface HeroProps {
   onExploreProducts: () => void;
   cmsSettings: CmsSettings;
   products: Product[];
+  heroMedia?: MediaItem[];
 }
 
-export default function Hero({ onExploreProducts, cmsSettings, products }: HeroProps) {
+export default function Hero({ onExploreProducts, cmsSettings, products, heroMedia = [] }: HeroProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (heroMedia.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroMedia.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [heroMedia]);
+
   // Find banner product
   const bannerProduct = products.find(p => cmsSettings.homepage.bannerProductIds.includes(p.id)) || products[0];
 
@@ -136,31 +147,99 @@ export default function Hero({ onExploreProducts, cmsSettings, products }: HeroP
             </div>
           </div>
 
-          {/* RIGHT SIDE: Featured Bouquet Image with Badges */}
+          {/* RIGHT SIDE: Featured Bouquet Image with Badges / Slider */}
           <div className="lg:col-span-5 relative w-full max-w-md mx-auto lg:max-w-none lg:mx-0 overflow-visible mt-8 lg:mt-0" id="hero-graphic-block">
-            {bannerImageUrl && (
+            {heroMedia.length > 0 ? (
               <div className="relative p-2.5">
-                {/* Main Bouquet Card */}
-                <div className="rounded-2xl overflow-hidden border border-stone-200/50 shadow-[0_20px_50px_rgba(4,97,66,0.12)] relative group max-h-[420px] md:max-h-[480px]">
-                  <img
-                    src={bannerImageUrl}
-                    alt={bannerTitle}
-                    referrerPolicy="no-referrer"
-                    className="w-full object-cover aspect-square sm:aspect-[4/5] object-center group-hover:scale-105 transition-transform duration-750"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-stone-950/15 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-white text-sans text-left">
+                {/* Custom Media Slider */}
+                <div className="rounded-2xl overflow-hidden border border-stone-200/50 shadow-[0_20px_50px_rgba(4,97,66,0.12)] relative group aspect-square sm:aspect-[4/5] bg-stone-950 flex items-center justify-center">
+                  
+                  {heroMedia.map((media, idx) => {
+                    const isVideo = media.mimeType?.startsWith("video/") || media.name.match(/\.(mp4|webm|mov)$/i);
+                    const isActive = idx === currentSlide;
+                    
+                    return (
+                      <div 
+                        key={media.id}
+                        className={`absolute inset-0 transition-opacity duration-1000 flex items-center justify-center ${
+                          isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                        }`}
+                      >
+                        {isVideo ? (
+                          <video
+                            src={media.url}
+                            className="w-full h-full object-cover"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                          />
+                        ) : (
+                          <img
+                            src={media.url}
+                            alt={`Hero Slide ${idx}`}
+                            className="w-full h-full object-cover object-center"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                      </div>
+                    );
+                  })}
+
+                  {/* Slider Controls */}
+                  {heroMedia.length > 1 && (
+                    <>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentSlide((prev) => (prev - 1 + heroMedia.length) % heroMedia.length);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentSlide((prev) => (prev + 1) % heroMedia.length);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+
+                      {/* Dots */}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+                        {heroMedia.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentSlide(idx)}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              idx === currentSlide ? "bg-[#ee7d99] w-4" : "bg-white/50 hover:bg-white"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Overlay branding text info */}
+                  <div className="absolute bottom-4 left-4 right-4 text-white text-sans text-left z-20 pointer-events-none">
                     <span className="px-2 py-0.5 bg-[#ee7d99] text-white font-mono text-[8.5px] uppercase tracking-widest rounded-sm font-bold inline-block mb-1.5">
-                      {bannerCategory}
+                      Bespoke Arrangements
                     </span>
-                    <p className="font-serif text-base font-bold">{bannerTitle}</p>
-                    <p className="text-[10px] text-white/80 mt-1 font-light font-sans leading-snug">{bannerDesc}</p>
+                    <p className="font-serif text-base font-bold">Pune Sajawat Creations</p>
+                    <p className="text-[10px] text-white/80 mt-1 font-light font-sans leading-snug">
+                      Luxury premium arrangements hand-crafted for your special moments in Pune.
+                    </p>
                   </div>
+
                 </div>
 
                 {/* Floating Badge: Same Day Delivery */}
                 <div 
-                  className="absolute -top-3 -left-3 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-bounce-subtle" 
+                  className="absolute -top-3 -left-3 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-bounce-subtle z-25" 
                   id="floating-badge-same-day"
                 >
                   <div className="w-8.5 h-8.5 rounded-full bg-[#ee7d99]/10 flex items-center justify-center text-[#ee7d99] shrink-0">
@@ -174,7 +253,7 @@ export default function Hero({ onExploreProducts, cmsSettings, products }: HeroP
 
                 {/* Floating Badge: Trusted by 1200+ Customers */}
                 <div 
-                  className="absolute -bottom-3 -right-3 bg-white/90 backdrop-blur-md rounded-2xl p-3.5 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-pulse-subtle" 
+                  className="absolute -bottom-3 -right-3 bg-white/90 backdrop-blur-md rounded-2xl p-3.5 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-pulse-subtle z-25" 
                   id="floating-badge-trusted"
                 >
                   <div className="w-8.5 h-8.5 rounded-full bg-[#046142]/10 flex items-center justify-center text-[#046142] shrink-0">
@@ -186,6 +265,56 @@ export default function Hero({ onExploreProducts, cmsSettings, products }: HeroP
                   </div>
                 </div>
               </div>
+            ) : (
+              bannerImageUrl && (
+                <div className="relative p-2.5">
+                  {/* Main Bouquet Card */}
+                  <div className="rounded-2xl overflow-hidden border border-stone-200/50 shadow-[0_20px_50px_rgba(4,97,66,0.12)] relative group max-h-[420px] md:max-h-[480px]">
+                    <img
+                      src={bannerImageUrl}
+                      alt={bannerTitle}
+                      referrerPolicy="no-referrer"
+                      className="w-full object-cover aspect-square sm:aspect-[4/5] object-center group-hover:scale-105 transition-transform duration-750"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-stone-950/15 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 text-white text-sans text-left">
+                      <span className="px-2 py-0.5 bg-[#ee7d99] text-white font-mono text-[8.5px] uppercase tracking-widest rounded-sm font-bold inline-block mb-1.5">
+                        {bannerCategory}
+                      </span>
+                      <p className="font-serif text-base font-bold">{bannerTitle}</p>
+                      <p className="text-[10px] text-white/80 mt-1 font-light font-sans leading-snug">{bannerDesc}</p>
+                    </div>
+                  </div>
+
+                  {/* Floating Badge: Same Day Delivery */}
+                  <div 
+                    className="absolute -top-3 -left-3 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-bounce-subtle" 
+                    id="floating-badge-same-day"
+                  >
+                    <div className="w-8.5 h-8.5 rounded-full bg-[#ee7d99]/10 flex items-center justify-center text-[#ee7d99] shrink-0">
+                      <Clock className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="text-left font-sans">
+                      <span className="text-[8.5px] text-[#046142] font-black uppercase tracking-wider block">Express Shipping</span>
+                      <span className="text-[10.5px] font-black text-slate-800">Same Day Delivery</span>
+                    </div>
+                  </div>
+
+                  {/* Floating Badge: Trusted by 1200+ Customers */}
+                  <div 
+                    className="absolute -bottom-3 -right-3 bg-white/90 backdrop-blur-md rounded-2xl p-3.5 shadow-xl border border-stone-100 flex items-center gap-2.5 animate-pulse-subtle" 
+                    id="floating-badge-trusted"
+                  >
+                    <div className="w-8.5 h-8.5 rounded-full bg-[#046142]/10 flex items-center justify-center text-[#046142] shrink-0">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div className="text-left font-sans">
+                      <span className="text-[11.5px] font-black text-slate-800 block leading-none">Trusted by 1200+</span>
+                      <span className="text-[9.5px] text-[#046142] font-bold block mt-1 uppercase tracking-wider">Happy Customers</span>
+                    </div>
+                  </div>
+                </div>
+              )
             )}
           </div>
         </div>

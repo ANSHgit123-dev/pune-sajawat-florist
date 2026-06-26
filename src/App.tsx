@@ -18,9 +18,10 @@ import CartDrawer from "./components/CartDrawer";
 import ProductDetailModal from "./components/ProductDetailModal";
 import ProductDetailPage from "./components/ProductDetailPage";
 import AdminDashboard from "./components/AdminDashboard";
-import { Product, CartItem, CmsSettings } from "./types";
+import { Product, CartItem, CmsSettings, MediaItem } from "./types";
 import { PRODUCTS } from "./data";
 import InventoryUpload from "./components/InventoryUpload";
+import CreationsInAction from "./components/CreationsInAction";
 
 const CATEGORY_EMOJIS: { [key: string]: string } = {
   "Flowers": "🌸",
@@ -253,6 +254,33 @@ export default function App() {
     }
   });
 
+  // 📸 Dynamic media files loaded from Supabase Storage
+  const [heroMedia, setHeroMedia] = useState<MediaItem[]>([]);
+  const [galleryMedia, setGalleryMedia] = useState<MediaItem[]>([]);
+  const [videosMedia, setVideosMedia] = useState<MediaItem[]>([]);
+
+  const loadMedia = async () => {
+    try {
+      const folders: ("hero" | "gallery" | "videos")[] = ["hero", "gallery", "videos"];
+      const promises = folders.map(async (folder) => {
+        const res = await fetch(`/api/media/list?folder=${folder}`);
+        if (res.ok) {
+          const data = await res.json();
+          return { folder, files: data.files || [] };
+        }
+        return { folder, files: [] };
+      });
+      const results = await Promise.all(promises);
+      results.forEach(({ folder, files }) => {
+        if (folder === "hero") setHeroMedia(files);
+        if (folder === "gallery") setGalleryMedia(files);
+        if (folder === "videos") setVideosMedia(files);
+      });
+    } catch (e) {
+      console.error("Failed to load media files", e);
+    }
+  };
+
   const loadCmsSettings = async () => {
     try {
       const res = await fetch("/api/cms");
@@ -296,15 +324,16 @@ export default function App() {
     }
   };
 
-  const loadProductsAndCms = async () => {
+  const loadProductsAndCmsAndMedia = async () => {
     await loadProductsFromStorage();
     await loadCmsSettings();
+    await loadMedia();
   };
 
   useEffect(() => {
-    loadProductsAndCms();
-    window.addEventListener("sajawat_catalog_updated", loadProductsAndCms);
-    return () => window.removeEventListener("sajawat_catalog_updated", loadProductsAndCms);
+    loadProductsAndCmsAndMedia();
+    window.addEventListener("sajawat_catalog_updated", loadProductsAndCmsAndMedia);
+    return () => window.removeEventListener("sajawat_catalog_updated", loadProductsAndCmsAndMedia);
   }, []);
 
   // Popstate handler for back/forward navigation
@@ -661,6 +690,7 @@ export default function App() {
             onExploreProducts={handleScrollToProducts} 
             cmsSettings={cmsSettings}
             products={deduplicatedProducts}
+            heroMedia={heroMedia}
           />
 
           {/* Main Core Gifting Categories */}
@@ -790,7 +820,10 @@ export default function App() {
           <WhyChooseUs />
 
           {/* Portfolio Design Gallery */}
-          <Gallery />
+          <Gallery galleryMedia={galleryMedia} />
+
+          {/* Creations in Action Video Reels Slider */}
+          <CreationsInAction videos={videosMedia} />
 
           {/* Client Feedback Reviews Section */}
           <Reviews />

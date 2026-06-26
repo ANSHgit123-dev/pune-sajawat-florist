@@ -38,6 +38,7 @@ import {
   DeliveryTypeConfig 
 } from "../utils/deliverySettings";
 import CatalogManager from "./CatalogManager";
+import MediaManager from "./MediaManager";
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -50,7 +51,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [loginError, setLoginError] = useState("");
   
   // Tab selector State
-  const [adminTab, setAdminTab] = useState<"orders" | "settings" | "catalog" | "catalog_manager" | "backups">("orders");
+  const [adminTab, setAdminTab] = useState<"orders" | "settings" | "catalog" | "catalog_manager" | "backups" | "media_manager">("orders");
 
   // Load products list for Catalog Manager CMS
   const [products, setProducts] = useState<Product[]>([]);
@@ -805,7 +806,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         </div>
 
         {/* ADMIN CONTROL TABS */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 bg-white border border-stone-200/80 p-1.5 rounded-2xl shadow-xs gap-1.5" id="admin-crm-control-tabs">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 bg-white border border-stone-200/80 p-1.5 rounded-2xl shadow-xs gap-1.5" id="admin-crm-control-tabs">
           <button
             onClick={() => setAdminTab("orders")}
             className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
@@ -827,6 +828,17 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             id="tab-btn-catalog-manager"
           >
             🗂️ Catalog Manager
+          </button>
+          <button
+            onClick={() => setAdminTab("media_manager")}
+            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              adminTab === "media_manager"
+                ? "bg-[#82862F] text-white shadow-sm"
+                : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
+            }`}
+            id="tab-btn-media-manager"
+          >
+            🖼️ Media Manager
           </button>
           <button
             onClick={() => setAdminTab("settings")}
@@ -1912,6 +1924,12 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               setProducts(updated);
               loadProducts(); // Reload to be safe
             }}
+            onBack={onBack}
+          />
+        )}
+
+        {adminTab === "media_manager" && (
+          <MediaManager
             onBack={onBack}
           />
         )}

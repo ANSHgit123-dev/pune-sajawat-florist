@@ -26,6 +26,25 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false }
 });
 
+// Ensure public Storage Buckets exist (both 'products' and 'media')
+(async () => {
+  try {
+    const { data: buckets, error: listErr } = await supabase.storage.listBuckets();
+    if (!listErr && buckets) {
+      const requiredBuckets = ["products", "media"];
+      for (const bucketName of requiredBuckets) {
+        if (!buckets.some(b => b.name === bucketName)) {
+          console.log(`Storage Bucket '${bucketName}' does not exist. Creating as PUBLIC...`);
+          await supabase.storage.createBucket(bucketName, { public: true });
+          console.log(`Storage Bucket '${bucketName}' created successfully!`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to automatically verify/create Supabase Storage Buckets:", err);
+  }
+})();
+
 // Modular Session Interface & Session Store
 export interface Session {
   id: string;
@@ -448,6 +467,113 @@ app.get("/api/admin/check-session", async (req, res) => {
     return res.json({ authenticated: false });
   }
   res.json({ authenticated: true, csrfToken: session.csrfToken });
+});
+
+// ==========================================
+// MEDIA MANAGER ENDPOINTS (Supabase Storage)
+// ==========================================
+
+// 1. List files in a media folder (hero, gallery, shop, videos)
+app.get("/api/media/list", async (req, res) => {
+  try {
+    const folder = (req.query.folder as string) || "hero";
+    
+    // Validate folders
+    const allowedFolders = ["hero", "gallery", "shop", "videos"];
+    if (!allowedFolders.includes(folder)) {
+      return res.status(400).json({ error: `Invalid folder. Must be one of: ${allowedFolders.join(", ")}` });
+    }
+
+    const { data, error } = await supabase.storage.from("media").list(folder, {
+      sortBy: { column: "created_at", order: "desc" }
+    });
+
+    if (error) throw error;
+
+    const mappedFiles = (data || [])
+      .filter(f => f.name !== ".emptyFolderPlaceholder") // ignore placeholder
+      .map(file => {
+        const { data: urlData } = supabase.storage.from("media").getPublicUrl(`${folder}/${file.name}`);
+        return {
+          name: file.name,
+          id: file.id,
+          size: file.metadata?.size || 0,
+          createdAt: file.created_at,
+          mimeType: file.metadata?.mimetype || "",
+          url: urlData.publicUrl
+        };
+      });
+
+    res.json({ files: mappedFiles });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to list media files", details: err?.message });
+  }
+});
+
+// 2. Upload media file to a media folder
+app.post("/api/media/upload", requireSessionWithCsrf, async (req, res) => {
+  try {
+    const { name, base64, folder } = req.body;
+    if (!name || !base64 || !folder) {
+      return res.status(400).json({ error: "Fields 'name', 'base64', and 'folder' are required" });
+    }
+
+    const allowedFolders = ["hero", "gallery", "shop", "videos"];
+    if (!allowedFolders.includes(folder)) {
+      return res.status(400).json({ error: `Invalid folder. Must be one of: ${allowedFolders.join(", ")}` });
+    }
+
+    // Clean base64 string
+    const matches = base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let dataBuffer: Buffer;
+    let mimeType = "image/png";
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      dataBuffer = Buffer.from(matches[2], "base64");
+    } else {
+      dataBuffer = Buffer.from(base64, "base64");
+    }
+
+    const { error } = await supabase.storage
+      .from("media")
+      .upload(`${folder}/${name}`, dataBuffer, {
+        contentType: mimeType,
+        upsert: true
+      });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage.from("media").getPublicUrl(`${folder}/${name}`);
+
+    res.json({ success: true, url: urlData.publicUrl, name });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to upload media file", details: err?.message });
+  }
+});
+
+// 3. Delete media file
+app.post("/api/media/delete", requireSessionWithCsrf, async (req, res) => {
+  try {
+    const { name, folder } = req.body;
+    if (!name || !folder) {
+      return res.status(400).json({ error: "Fields 'name' and 'folder' are required" });
+    }
+
+    const allowedFolders = ["hero", "gallery", "shop", "videos"];
+    if (!allowedFolders.includes(folder)) {
+      return res.status(400).json({ error: `Invalid folder. Must be one of: ${allowedFolders.join(", ")}` });
+    }
+
+    const { error } = await supabase.storage
+      .from("media")
+      .remove([`${folder}/${name}`]);
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to delete media file", details: err?.message });
+  }
 });
 
 // API retrieve products
