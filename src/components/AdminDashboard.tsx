@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Lock, 
   Search, 
@@ -48,11 +48,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [password, setPassword] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const isInitialRender = useRef(true);
-  if (isInitialRender.current) {
-    console.log("[AdminDashboard] Initial value of isAuthorized:", isAuthorized);
-    isInitialRender.current = false;
-  }
   const [loginError, setLoginError] = useState("");
   
   // Tab selector State
@@ -573,22 +568,17 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         const res = await fetch("/api/admin/check-session");
         if (res.ok) {
           const data = await res.json();
-          console.log("[AdminDashboard] Response body from /api/admin/check-session:", data);
           if (data.authenticated) {
-            console.log("[AdminDashboard] verifySession: setting isAuthorized to true");
             setIsAuthorized(true);
             sessionStorage.setItem("sajawat_admin_auth", "true");
             sessionStorage.setItem("sajawat_csrf_token", data.csrfToken);
             loadProducts();
             loadDeletedProducts();
           } else {
-            console.log("[AdminDashboard] verifySession: setting isAuthorized to false");
             setIsAuthorized(false);
             sessionStorage.removeItem("sajawat_admin_auth");
             sessionStorage.removeItem("sajawat_csrf_token");
           }
-        } else {
-          console.log("[AdminDashboard] verifySession response is not ok:", res.status);
         }
       } catch (err) {
         console.error("Session verification failed", err);
@@ -608,9 +598,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
         body: JSON.stringify({ password })
       });
       const data = await res.json();
-      console.log("[AdminDashboard] Response body from /api/admin/login:", data);
       if (res.ok && data.success) {
-        console.log("[AdminDashboard] handleLoginSubmit: setting isAuthorized to true");
         setIsAuthorized(true);
         setLoginError("");
         sessionStorage.setItem("sajawat_admin_auth", "true");
