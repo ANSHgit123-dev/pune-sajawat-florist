@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MessageCircle, ShoppingBag, Eye, Store, Sparkles, Phone, ArrowUpRight, Flower, ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Navbar from "./components/Navbar";
@@ -236,7 +236,7 @@ export default function App() {
 
   // Selected addons globally tracked for checkout & grand totals
   const [selectedAddons, setSelectedAddons] = useState<{ [addonId: string]: number }>({});
-  
+
   // Track currently inspected product for FNP style details page popup
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
 
@@ -303,10 +303,10 @@ export default function App() {
       if (res.ok) {
         const serverProds = await res.json();
         // Only accept a non-empty array from the API.
-      // An empty array ([] ) means Supabase cold-start returned no rows yet —
-      // fall through to localStorage / static PRODUCTS instead of surfacing
-      // the empty-catalog page during startup.
-      if (Array.isArray(serverProds) && serverProds.length > 0) {
+        // An empty array ([] ) means Supabase cold-start returned no rows yet —
+        // fall through to localStorage / static PRODUCTS instead of surfacing
+        // the empty-catalog page during startup.
+        if (Array.isArray(serverProds) && serverProds.length > 0) {
           localStorage.setItem("sajawat_catalog_products", JSON.stringify(serverProds));
           return serverProds;
         }
@@ -527,79 +527,51 @@ export default function App() {
     setCart([]);
   };
 
-  // ─── STATE 1: INITIAL LOADING ───────────────────────────────────────────────
-  // Evaluated immediately after all state and effect hooks.
-  // This makes it structurally impossible to calculate or evaluate deduplicatedProducts,
-  // homepageProducts, etc. while isLoadingProducts is true.
-  if (isLoadingProducts) {
-    return (
-      <div
-        className="fixed inset-0 min-h-screen w-full flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
-        id="app-loading-screen"
-      >
-        {/* Background Floral Accents */}
-        <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
-          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-          </svg>
-        </div>
-        <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
-          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-          </svg>
-        </div>
+  // ─── PRODUCT DERIVED DATA ───────────────────────────────────────────
+  // Using useMemo to strictly avoid any product-derived computations while loading.
+  const deduplicatedProducts = useMemo(() => {
+    if (isLoadingProducts) return [];
+    return mergeDuplicateProducts(loadedProducts);
+  }, [isLoadingProducts, loadedProducts]);
 
-        <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
-          <img
-            src="/logo.png"
-            alt="Pune Sajawat Florist Logo"
-            className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-          <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
-            <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
-            <p className="text-sm text-stone-500 font-sans tracking-wide">
-              Preparing today's fresh flowers...
-            </p>
-          </div>
-        </div>
-      </div>
+  const categoryProductCounts = useMemo(() => {
+    if (isLoadingProducts) return {};
+    return deduplicatedProducts.reduce((acc, p) => {
+      if (p.isEnabled !== false && !p.isHidden) {
+        acc[p.category] = (acc[p.category] || 0) + 1;
+      }
+      return acc;
+    }, {} as { [key: string]: number });
+  }, [isLoadingProducts, deduplicatedProducts]);
+
+  const homepageProducts = useMemo(() => {
+    if (isLoadingProducts) return [];
+    return deduplicatedProducts.filter(p => p.isEnabled !== false && !p.isHidden);
+  }, [isLoadingProducts, deduplicatedProducts]);
+
+  const categoryProducts = useMemo(() => {
+    if (isLoadingProducts) return [];
+    return deduplicatedProducts.filter(p =>
+      p.isEnabled !== false && !p.isHidden && p.category === selectedCategory
     );
-  }
+  }, [isLoadingProducts, deduplicatedProducts, selectedCategory]);
 
-  const deduplicatedProducts = mergeDuplicateProducts(loadedProducts);
-
-  const categoryProductCounts = deduplicatedProducts.reduce((acc, p) => {
-    if (p.isEnabled !== false && !p.isHidden) {
-      acc[p.category] = (acc[p.category] || 0) + 1;
-    }
-    return acc;
-  }, {} as { [key: string]: number });
-
-  const homepageProducts = deduplicatedProducts.filter(p => p.isEnabled !== false && !p.isHidden);
-  
-  const categoryProducts = deduplicatedProducts.filter(p => 
-    p.isEnabled !== false && !p.isHidden && p.category === selectedCategory
-  );
-
-  const searchFilteredProducts = deduplicatedProducts.filter((product) => {
-    if (product.isEnabled === false || product.isHidden) {
-      return false;
-    }
-    return (
-      searchTerm === "" ||
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
+  const searchFilteredProducts = useMemo(() => {
+    if (isLoadingProducts) return [];
+    return deduplicatedProducts.filter((product) => {
+      if (product.isEnabled === false || product.isHidden) {
+        return false;
+      }
+      return (
+        searchTerm === "" ||
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
+  }, [isLoadingProducts, deduplicatedProducts, searchTerm]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -658,7 +630,7 @@ export default function App() {
   // Reachable only after isLoadingProducts=false, which is ALWAYS committed in the
   // same React batch as setLoadedProducts([...]), so loadedProducts is guaranteed
   // to reflect actual API/localStorage/static results at this point.
-  if (deduplicatedProducts.length === 0) {
+  if (!isLoadingProducts && deduplicatedProducts.length === 0) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/80 shadow-xl space-y-5">
@@ -666,7 +638,7 @@ export default function App() {
             <Flower className="w-8 h-8 animate-spin-lazy" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-stone-900 font-serif">TEST 123456789</h2>
+            <h2 className="text-xl font-bold text-stone-900 font-serif">We're updating our collection</h2>
             <p className="text-xs text-stone-500 leading-relaxed font-light">
               New floral arrangements are coming soon. In the meantime, please contact us on WhatsApp for custom orders and inquiries.
             </p>
@@ -685,7 +657,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans select-none antialiased bg-stone-50/20 pr-0" id="pune-sajawat-app">
+    <div className="relative w-full min-h-screen">
+      {!isLoadingProducts && (
+        <div className="min-h-screen flex flex-col font-sans select-none antialiased bg-stone-50/20 pr-0" id="pune-sajawat-app">
       {/* Announcement Bar at the very top of all pages */}
       <AnnouncementBar />
       {/* Breadcrumbs navigation only on subpages */}
@@ -775,8 +749,8 @@ export default function App() {
         /* Standard Single-Section Homepage Layout */
         <>
           {/* Hero Section */}
-          <Hero 
-            onExploreProducts={handleScrollToProducts} 
+          <Hero
+            onExploreProducts={handleScrollToProducts}
             cmsSettings={cmsSettings}
             products={deduplicatedProducts}
             heroMedia={heroMedia}
@@ -792,7 +766,7 @@ export default function App() {
           {/* Featured Products Section */}
           <section className="py-10 bg-white border-t border-stone-100 w-full" id="featured-products-section">
             <div className="w-full px-6">
-              
+
               {/* Header row details */}
               <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-8">
                 <div>
@@ -803,7 +777,7 @@ export default function App() {
                     {searchTerm !== "" ? "Search Results" : "Featured Products"}
                   </h3>
                   <p className="text-xs text-slate-550 max-w-md mt-1 font-sans font-light">
-                    {searchTerm !== "" 
+                    {searchTerm !== ""
                       ? `Showing products matching search term "${searchTerm}"`
                       : "Browse all our handcrafted premium florist collections."}
                   </p>
@@ -878,7 +852,7 @@ export default function App() {
                     Discover handcrafted bouquets, flower baskets and gift hampers for every occasion.
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-4 sm:gap-5 w-full">
                   {Object.entries(categoryProductCounts).map(([catName, count]) => {
                     return (
@@ -1016,6 +990,59 @@ export default function App() {
         )}
       </AnimatePresence>
 
+    </div>
+      )}
+
+      {/* Premium Florist Loading Screen Overlay */}
+      <AnimatePresence>
+        {isLoadingProducts && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 z-50 min-h-screen w-full flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
+            id="app-loading-screen"
+          >
+            {/* Background Floral Accents */}
+            <div className="absolute top-4 left-4 w-32 h-32 md:w-48 md:h-48 opacity-15 text-[#82862F] pointer-events-none">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2" className="w-full h-full">
+                <path d="M 0,0 C 30,30 30,60 60,90 C 50,70 20,40 0,0" />
+                <path d="M 15,0 C 40,40 40,70 70,80" />
+                <circle cx="60" cy="90" r="3" fill="currentColor" />
+                <circle cx="70" cy="80" r="2.5" fill="currentColor" />
+              </svg>
+            </div>
+            <div className="absolute bottom-4 right-4 w-32 h-32 md:w-48 md:h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2" className="w-full h-full">
+                <path d="M 0,0 C 30,30 30,60 60,90 C 50,70 20,40 0,0" />
+                <path d="M 15,0 C 40,40 40,70 70,80" />
+                <circle cx="60" cy="90" r="3" fill="currentColor" />
+                <circle cx="70" cy="80" r="2.5" fill="currentColor" />
+              </svg>
+            </div>
+
+            <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
+              <img
+                src="/logo.png"
+                alt="Pune Sajawat Florist Logo"
+                className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
+                <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide leading-tight">
+                  Preparing Today's Fresh Flowers...
+                </h2>
+                <p className="text-xs text-stone-500 font-sans tracking-wide font-light">
+                  Please wait while we arrange something beautiful for you.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
