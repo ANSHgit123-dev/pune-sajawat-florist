@@ -666,7 +666,7 @@ export default function App() {
             <Flower className="w-8 h-8 animate-spin-lazy" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-stone-900 font-serif">We're updating our collection</h2>
+            <h2 className="text-xl font-bold text-stone-900 font-serif">TEST 123456789</h2>
             <p className="text-xs text-stone-500 leading-relaxed font-light">
               New floral arrangements are coming soon. In the meantime, please contact us on WhatsApp for custom orders and inquiries.
             </p>
