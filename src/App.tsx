@@ -527,6 +527,51 @@ export default function App() {
     setCart([]);
   };
 
+  // ─── STATE 1: INITIAL LOADING ───────────────────────────────────────────────
+  // Evaluated immediately after all state and effect hooks.
+  // This makes it structurally impossible to calculate or evaluate deduplicatedProducts,
+  // homepageProducts, etc. while isLoadingProducts is true.
+  if (isLoadingProducts) {
+    return (
+      <div
+        className="fixed inset-0 min-h-screen w-full flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
+        id="app-loading-screen"
+      >
+        {/* Background Floral Accents */}
+        <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
+          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+          </svg>
+        </div>
+        <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
+          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+          </svg>
+        </div>
+
+        <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
+          <img
+            src="/logo.png"
+            alt="Pune Sajawat Florist Logo"
+            className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
+            <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
+            <p className="text-sm text-stone-500 font-sans tracking-wide">
+              Preparing today's fresh flowers...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const deduplicatedProducts = mergeDuplicateProducts(loadedProducts);
 
   const categoryProductCounts = deduplicatedProducts.reduce((acc, p) => {
@@ -580,51 +625,7 @@ export default function App() {
     }
   };
 
-  // ─── STATE 1: INITIAL LOADING ───────────────────────────────────────────────
-  // This is the FIRST early return. While isLoadingProducts=true nothing else
-  // renders — not the homepage, not the empty-catalog page. This is structurally
-  // impossible to bypass because isLoadingProducts only becomes false in the
-  // SAME React commit that setLoadedProducts([...]) fires (see above).
-  if (isLoadingProducts) {
-    return (
-      <div
-        className="fixed inset-0 min-h-screen w-full flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
-        id="app-loading-screen"
-      >
-        {/* Background Floral Accents */}
-        <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
-          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-          </svg>
-        </div>
-        <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
-          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-          </svg>
-        </div>
 
-        <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
-          <img
-            src="/logo.png"
-            alt="Pune Sajawat Florist Logo"
-            className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-          <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
-            <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
-            <p className="text-sm text-stone-500 font-sans tracking-wide">
-              Preparing today's fresh flowers...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ─── POST-LOAD ROUTING ───────────────────────────────────────────────────────
   let activeProductPage: Product | null = null;
