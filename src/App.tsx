@@ -302,7 +302,11 @@ export default function App() {
       const res = await fetch("/api/products");
       if (res.ok) {
         const serverProds = await res.json();
-        if (Array.isArray(serverProds)) {
+        // Only accept a non-empty array from the API.
+      // An empty array ([] ) means Supabase cold-start returned no rows yet —
+      // fall through to localStorage / static PRODUCTS instead of surfacing
+      // the empty-catalog page during startup.
+      if (Array.isArray(serverProds) && serverProds.length > 0) {
           localStorage.setItem("sajawat_catalog_products", JSON.stringify(serverProds));
           return serverProds;
         }
@@ -336,7 +340,9 @@ export default function App() {
         loadCmsSettings(),
         loadMedia()
       ]);
-      setLoadedProducts(products ?? PRODUCTS);
+      // ?? only catches null/undefined — NOT an empty array.
+      // Use explicit length check so an empty result always falls back to PRODUCTS.
+      setLoadedProducts(products && products.length > 0 ? products : PRODUCTS);
       setIsLoadingProducts(false); // ← same sync block as line above
     } catch (err) {
       console.error("Error loading application data:", err);
