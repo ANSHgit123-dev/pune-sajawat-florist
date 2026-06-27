@@ -478,7 +478,7 @@ app.get("/api/admin/check-session", async (req, res) => {
 app.get("/api/media/list", async (req, res) => {
   try {
     const folder = (req.query.folder as string) || "hero";
-    
+
     // Validate folders
     const allowedFolders = ["hero", "gallery", "shop", "videos"];
     if (!allowedFolders.includes(folder)) {
