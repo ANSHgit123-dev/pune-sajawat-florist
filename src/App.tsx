@@ -327,23 +327,21 @@ export default function App() {
   const loadProductsAndCmsAndMedia = async () => {
     try {
       // loadProductsFromStorage now RETURNS products instead of calling setState.
-      // We call setLoadedProducts and setIsLoadingProducts(false) together in the
-      // same synchronous block so React 18 batches them into ONE commit.
-      // After that single commit: isLoadingProducts=false AND loadedProducts=[...]
-      // There is no intermediate render where both could disagree.
+      // setLoadedProducts and setIsLoadingProducts(false) are called on adjacent
+      // lines in the same synchronous block — React 18 batches them into ONE commit.
+      // There is NO intermediate render where isLoadingProducts=false AND
+      // loadedProducts=[] can both be true at the same time.
       const [products] = await Promise.all([
         loadProductsFromStorage(),
         loadCmsSettings(),
         loadMedia()
       ]);
       setLoadedProducts(products ?? PRODUCTS);
+      setIsLoadingProducts(false); // ← same sync block as line above
     } catch (err) {
       console.error("Error loading application data:", err);
       setLoadedProducts(PRODUCTS);
-    } finally {
-      // React 18 automatic batching: this runs synchronously after the try/catch
-      // and is batched with whatever setLoadedProducts call ran above.
-      setIsLoadingProducts(false);
+      setIsLoadingProducts(false); // ← same sync block as line above
     }
   };
 
