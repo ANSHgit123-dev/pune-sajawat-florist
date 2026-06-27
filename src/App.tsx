@@ -245,6 +245,8 @@ export default function App() {
   // 📸 Dynamic catalog state loaded from LocalStorage
   const [loadedProducts, setLoadedProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isFetchCompleted, setIsFetchCompleted] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const [cmsSettings, setCmsSettings] = useState<CmsSettings>({
     sections: [],
     homepage: {
@@ -326,7 +328,6 @@ export default function App() {
   };
 
   const loadProductsAndCmsAndMedia = async () => {
-    setIsLoadingProducts(true);
     try {
       await Promise.all([
         loadProductsFromStorage(),
@@ -336,7 +337,7 @@ export default function App() {
     } catch (err) {
       console.error("Error loading application data:", err);
     } finally {
-      setIsLoadingProducts(false);
+      setIsFetchCompleted(true);
     }
   };
 
@@ -345,6 +346,18 @@ export default function App() {
     window.addEventListener("sajawat_catalog_updated", loadProductsAndCmsAndMedia);
     return () => window.removeEventListener("sajawat_catalog_updated", loadProductsAndCmsAndMedia);
   }, []);
+
+  // Sync state and hide loading screen only after products are loaded and React state is updated
+  useEffect(() => {
+    if (isFetchCompleted) {
+      setIsLoadingProducts(false);
+      const timer = setTimeout(() => {
+        setShowLoadingScreen(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isFetchCompleted, loadedProducts]);
+
 
   // Popstate handler for back/forward navigation
   useEffect(() => {
@@ -568,31 +581,7 @@ export default function App() {
   };
 
 
-  if (isLoadingProducts) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans" id="app-loading-screen">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/80 shadow-xl space-y-6 flex flex-col items-center">
-          <img
-            src="/logo.png"
-            alt="Pune Sajawat Florist Logo"
-            className="h-[75px] w-auto object-contain bg-transparent border-none shadow-none"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <div className="w-16 h-16 rounded-full bg-[#046142]/10 flex items-center justify-center text-[#046142] animate-pulse">
-            <Flower className="w-8 h-8 animate-spin-lazy text-[#046142]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-stone-900 font-serif">Pune Sajawat Florist</h2>
-            <p className="text-xs text-stone-500 font-light">
-              Loading our fresh collection...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   let activeProductPage: Product | null = null;
   if (currentPath.startsWith("/product/")) {
@@ -974,6 +963,53 @@ export default function App() {
             >
               Checkout 🌸
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Florist Loading Screen Overlay */}
+      <AnimatePresence>
+        {showLoadingScreen && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 min-h-screen w-full z-50 flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
+            id="app-loading-screen"
+          >
+            {/* Background Floral Accents */}
+            <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
+              <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+                <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+                <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+              </svg>
+            </div>
+            <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
+              <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+                <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+                <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+              </svg>
+            </div>
+
+            <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
+              <img
+                src="/logo.png"
+                alt="Pune Sajawat Florist Logo"
+                className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
+                <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
+                <p className="text-sm text-stone-500 font-sans tracking-wide">
+                  Preparing today's fresh flowers...
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
