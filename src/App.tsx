@@ -242,11 +242,9 @@ export default function App() {
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // 📸 Dynamic catalog state loaded from LocalStorage
+  // 📸 Dynamic catalog state — three explicit states: loading / loaded / empty
   const [loadedProducts, setLoadedProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isFetchCompleted, setIsFetchCompleted] = useState(false);
-  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const [cmsSettings, setCmsSettings] = useState<CmsSettings>({
     sections: [],
     homepage: {
@@ -296,15 +294,17 @@ export default function App() {
     }
   };
 
-  const loadProductsFromStorage = async () => {
+  // Returns the resolved product list — does NOT call setLoadedProducts.
+  // This lets the caller batch setLoadedProducts + setIsLoadingProducts(false)
+  // into a single React commit, eliminating any intermediate empty-catalog render.
+  const loadProductsFromStorage = async (): Promise<Product[]> => {
     try {
       const res = await fetch("/api/products");
       if (res.ok) {
         const serverProds = await res.json();
         if (Array.isArray(serverProds)) {
-          setLoadedProducts(serverProds);
           localStorage.setItem("sajawat_catalog_products", JSON.stringify(serverProds));
-          return;
+          return serverProds;
         }
       }
     } catch (apiErr) {
@@ -315,29 +315,35 @@ export default function App() {
       const saved = localStorage.getItem("sajawat_catalog_products");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setLoadedProducts(parsed);
-          return;
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
-      setLoadedProducts(PRODUCTS);
     } catch (e) {
       console.error(e);
-      setLoadedProducts(PRODUCTS);
     }
+
+    return PRODUCTS;
   };
 
   const loadProductsAndCmsAndMedia = async () => {
     try {
-      await Promise.all([
+      // loadProductsFromStorage now RETURNS products instead of calling setState.
+      // We call setLoadedProducts and setIsLoadingProducts(false) together in the
+      // same synchronous block so React 18 batches them into ONE commit.
+      // After that single commit: isLoadingProducts=false AND loadedProducts=[...]
+      // There is no intermediate render where both could disagree.
+      const [products] = await Promise.all([
         loadProductsFromStorage(),
         loadCmsSettings(),
         loadMedia()
       ]);
+      setLoadedProducts(products ?? PRODUCTS);
     } catch (err) {
       console.error("Error loading application data:", err);
+      setLoadedProducts(PRODUCTS);
     } finally {
-      setIsFetchCompleted(true);
+      // React 18 automatic batching: this runs synchronously after the try/catch
+      // and is batched with whatever setLoadedProducts call ran above.
+      setIsLoadingProducts(false);
     }
   };
 
@@ -347,16 +353,6 @@ export default function App() {
     return () => window.removeEventListener("sajawat_catalog_updated", loadProductsAndCmsAndMedia);
   }, []);
 
-  // Sync state and hide loading screen only after products are loaded and React state is updated
-  useEffect(() => {
-    if (isFetchCompleted) {
-      setIsLoadingProducts(false);
-      const timer = setTimeout(() => {
-        setShowLoadingScreen(false);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isFetchCompleted, loadedProducts]);
 
 
   // Popstate handler for back/forward navigation
@@ -580,9 +576,53 @@ export default function App() {
     }
   };
 
+  // ─── STATE 1: INITIAL LOADING ───────────────────────────────────────────────
+  // This is the FIRST early return. While isLoadingProducts=true nothing else
+  // renders — not the homepage, not the empty-catalog page. This is structurally
+  // impossible to bypass because isLoadingProducts only becomes false in the
+  // SAME React commit that setLoadedProducts([...]) fires (see above).
+  if (isLoadingProducts) {
+    return (
+      <div
+        className="fixed inset-0 min-h-screen w-full flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
+        id="app-loading-screen"
+      >
+        {/* Background Floral Accents */}
+        <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
+          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+          </svg>
+        </div>
+        <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
+          <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
+            <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
+            <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
+          </svg>
+        </div>
 
+        <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
+          <img
+            src="/logo.png"
+            alt="Pune Sajawat Florist Logo"
+            className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
+            <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
+            <p className="text-sm text-stone-500 font-sans tracking-wide">
+              Preparing today's fresh flowers...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-
+  // ─── POST-LOAD ROUTING ───────────────────────────────────────────────────────
   let activeProductPage: Product | null = null;
   if (currentPath.startsWith("/product/")) {
     const id = currentPath.replace("/product/", "");
@@ -609,7 +649,11 @@ export default function App() {
     );
   }
 
-  if (!isLoadingProducts && deduplicatedProducts.length === 0) {
+  // ─── STATE 2: LOADED BUT EMPTY ──────────────────────────────────────────────────
+  // Reachable only after isLoadingProducts=false, which is ALWAYS committed in the
+  // same React batch as setLoadedProducts([...]), so loadedProducts is guaranteed
+  // to reflect actual API/localStorage/static results at this point.
+  if (deduplicatedProducts.length === 0) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-stone-50 p-6 text-center select-none font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/80 shadow-xl space-y-5">
@@ -963,53 +1007,6 @@ export default function App() {
             >
               Checkout 🌸
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Premium Florist Loading Screen Overlay */}
-      <AnimatePresence>
-        {showLoadingScreen && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="fixed inset-0 min-h-screen w-full z-50 flex flex-col justify-center items-center p-6 text-center select-none bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE0]"
-            id="app-loading-screen"
-          >
-            {/* Background Floral Accents */}
-            <div className="absolute top-0 left-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none">
-              <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-                <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-                <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-              </svg>
-            </div>
-            <div className="absolute bottom-0 right-0 w-48 h-48 opacity-15 text-[#82862F] pointer-events-none rotate-180">
-              <svg viewBox="0 0 100 100" fill="currentColor" className="w-full h-full">
-                <path d="M0,0 Q30,10 40,40 Q10,30 0,0" />
-                <path d="M0,0 Q10,30 40,40 Q30,10 0,0" />
-              </svg>
-            </div>
-
-            <div className="max-w-md w-full bg-white/70 backdrop-blur-md rounded-3xl p-10 border border-[#82862F]/10 shadow-2xl space-y-6 flex flex-col items-center">
-              <img
-                src="/logo.png"
-                alt="Pune Sajawat Florist Logo"
-                className="h-[80px] w-auto object-contain bg-transparent border-none shadow-none"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <div className="w-20 h-20 rounded-full bg-[#82862F]/10 flex items-center justify-center text-[#82862F]">
-                <Flower className="w-10 h-10 animate-sjwt-bloom text-[#82862F]" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-stone-900 font-serif tracking-wide">Pune Sajawat Florist</h2>
-                <p className="text-sm text-stone-500 font-sans tracking-wide">
-                  Preparing today's fresh flowers...
-                </p>
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
