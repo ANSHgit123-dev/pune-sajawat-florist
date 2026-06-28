@@ -343,20 +343,59 @@ export default function CartDrawer({
                   <button
                     onClick={() => {
                       const floristWhatsApp = "918484905722";
-                      let messageText = `✨ *New Order Request - Pune Sajawat Florist* ✨\n\n`;
-                      messageText += `🆔 *ORDER ID:* *${placedOrderId}*\n`;
-                      messageText += `👤 *Customer Name:* ${recipientName}\n`;
-                      messageText += `📞 *Phone Number:* ${recipientPhone}\n`;
-                      messageText += `📅 *Delivery Date:* ${deliveryDate}\n`;
-                      messageText += `⏰ *Delivery Slot:* ${getDeliveryLabel()}\n`;
-                      messageText += `📍 *Detailed Address:* ${address.trim()}, ${deliveryArea}, Pune - ${pincode}\n`;
-                      if (customMessage.trim()) {
-                        messageText += `💬 *Message Tag:* "${customMessage.trim()}"\n`;
-                      }
-                      messageText += `💵 *Total Order Amount:* *₹${finalTotal}*\n\n`;
-                      messageText += `Please verify this in your Pune Order list, confirm availabilities, and send QR code/UPI link to complete. Thank you!`;
 
-                      const encodedText = encodeURIComponent(messageText);
+                      let msg = `🌸 *Pune Sajawat Florist Order*\n`;
+                      msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+                      msg += `👤 *Customer Details*\n`;
+                      msg += `Recipient Name: ${recipientName}\n`;
+                      msg += `Phone Number: ${recipientPhone}\n\n`;
+
+                      msg += `📦 *Delivery Details*\n`;
+                      msg += `Delivery Date: ${deliveryDate}\n`;
+                      msg += `Delivery Type: ${getDeliveryLabel()}\n`;
+                      msg += `Area: ${deliveryArea}\n`;
+                      msg += `Pincode: ${pincode}\n`;
+                      msg += `Complete Address: ${address.trim()}\n`;
+                      msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+                      msg += `🛒 *Products Ordered*\n`;
+                      cart.forEach(item => {
+                        msg += `• ${item.product.title} × ${item.quantity}\n`;
+                        msg += `  ₹${item.product.price * item.quantity}\n`;
+                      });
+                      msg += `\n`;
+
+                      const activeAddons = Object.entries(selectedAddons).filter(([, qty]) => qty > 0);
+                      if (activeAddons.length > 0) {
+                        msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                        msg += `🍫 *Selected Add-ons*\n`;
+                        activeAddons.forEach(([addonId, qty]) => {
+                          const ad = ADDONS.find(a => a.id === addonId);
+                          if (ad) {
+                            msg += `• ${ad.name} × ${qty}  — ₹${ad.price * qty}\n`;
+                          }
+                        });
+                        msg += `\n`;
+                      }
+
+                      if (customMessage.trim()) {
+                        msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                        msg += `💌 *Greeting Card Message*\n`;
+                        msg += `"${customMessage.trim()}"\n\n`;
+                      }
+
+                      msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                      msg += `🧾 *Order Summary*\n`;
+                      msg += `Products Total: ₹${itemsSubtotal}\n`;
+                      if (addonsSubtotal > 0) msg += `Add-ons Total: ₹${addonsSubtotal}\n`;
+                      msg += `Delivery: ${deliveryCost > 0 ? `₹${deliveryCost}` : "Free"}\n`;
+                      msg += `*Grand Total: ₹${finalTotal}*\n\n`;
+
+                      msg += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+                      msg += `🙏 Thank you!\nPlease confirm this order.`;
+
+                      const encodedText = encodeURIComponent(msg);
                       window.open(`https://api.whatsapp.com/send?phone=${floristWhatsApp}&text=${encodedText}`, "_blank");
 
                       onClearCart();

@@ -53,13 +53,13 @@ export default function ProductCard({ product, onAddToCart, onOpenCart, onSelect
       id={`product-card-${product.id}`}
     >
       {/* Product Image and Badges */}
-      <div className="relative w-full h-[320px] bg-slate-50 overflow-hidden shrink-0 rounded-t-3xl">
+      <div className="relative w-full h-[280px] bg-white overflow-hidden shrink-0 rounded-t-3xl">
         <img
           src={product.image}
           alt={product.title || product.name}
           loading="lazy"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+          className="w-full h-full object-contain p-3 group-hover:scale-[1.04] transition-transform duration-500"
         />
 
         {/* Shadow overlays */}

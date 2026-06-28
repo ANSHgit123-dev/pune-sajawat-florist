@@ -6,6 +6,7 @@ import Hero from "./components/Hero";
 import AnnouncementBar from "./components/AnnouncementBar";
 import Categories from "./components/Categories";
 import ProductCard from "./components/ProductCard";
+import ProductCardSkeleton from "./components/ProductCardSkeleton";
 import Occasions from "./components/Occasions";
 import WhyChooseUs from "./components/WhyChooseUs";
 import Gallery from "./components/Gallery";
@@ -812,35 +813,40 @@ export default function App() {
               </div>
 
               {/* Horizontal Slider/Carousel Layout */}
-              {(searchTerm !== "" ? searchFilteredProducts : homepageProducts).length === 0 ? (
-                <div className="py-10 text-center space-y-4 max-w-sm mx-auto bg-stone-50 rounded-3xl p-8 border border-stone-100" id="products-not-found-view">
-                  <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-brand-pink-500 mx-auto">
-                    <Store className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-stone-900 text-base">No Matching Designs Found</h4>
-                    <p className="text-xs text-stone-500 mt-1">
-                      We customize anything! Message our designers on WhatsApp to share a custom reference image or budget pattern.
+              {isLoadingProducts ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8" id="products-loading-skeleton-grid">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : (searchTerm !== "" ? searchFilteredProducts : homepageProducts).length === 0 ? (
+                <div className="py-12 text-center space-y-5 max-w-sm mx-auto" id="products-not-found-view">
+                  <div className="text-5xl">🌸</div>
+                  <div className="space-y-1.5">
+                    <h4 className="font-bold text-stone-900 text-lg font-serif">No bouquets found</h4>
+                    <p className="text-sm text-stone-500 leading-relaxed">
+                      We couldn't find any bouquets matching your search.
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2 pt-2">
-                    <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedCategory("All");
-                      }}
-                      className="px-5 py-2.5 bg-stone-900 text-white hover:bg-stone-850 rounded-xl font-bold text-xs tracking-wider cursor-pointer font-sans"
-                    >
-                      Reset Catalog Filters
-                    </button>
-                    <button
-                      onClick={handleDirectWhatsAppHotline}
-                      className="px-5 py-2.5 bg-[#046142] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-                      <span>Send Custom Image on WhatsApp</span>
-                    </button>
+                  <div className="bg-white border border-stone-100 rounded-2xl p-4 text-left space-y-1.5 shadow-sm">
+                    <p className="text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">Try searching for:</p>
+                    {["Roses", "Lilies", "Sunflowers", "Birthday", "Anniversary", "Wedding"].map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setSearchTerm(s)}
+                        className="block w-full text-left text-sm text-[#82862F] hover:text-[#6C7026] hover:bg-[#F9FAEE] px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        • {s}
+                      </button>
+                    ))}
                   </div>
+                  <button
+                    onClick={() => { setSearchTerm(""); setSelectedCategory("All"); }}
+                    className="w-full py-3 bg-[#82862F] hover:bg-[#6C7026] text-white font-bold text-sm rounded-xl transition-colors cursor-pointer shadow-sm"
+                    id="browse-all-bouquets-btn"
+                  >
+                    Browse All Bouquets
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 justify-start" id="featured-products-grid">
