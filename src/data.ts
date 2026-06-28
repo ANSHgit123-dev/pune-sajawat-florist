@@ -8,8 +8,33 @@ export const CATEGORIES: Category[] = [
   { id: "Gift Hampers", name: "Gift Hampers", image: "/public/products/media__1782144641863.jpg", count: "Pune Florist Selection" }
 ];
 
-// Empty addon list to avoid dummy products or stock images
-export const ADDONS: Addon[] = [];
+// Checkout add-ons — chocolates only (appear in cart drawer, never in storefront)
+export const ADDONS: Addon[] = [
+  {
+    id: "addon_kitkat",
+    name: "KitKat Chocolate Bar",
+    price: 40,
+    image: "/public/products/chocolate_kitkat.jpg"
+  },
+  {
+    id: "addon_snickers",
+    name: "Snickers Chocolate Bar",
+    price: 45,
+    image: "/public/products/chocolate_snickers.jpg"
+  },
+  {
+    id: "addon_cadbury_dairy_milk",
+    name: "Cadbury Dairy Milk (Maha Pack)",
+    price: 55,
+    image: "/public/products/chocolate_cadbury_dairy_milk.jpg"
+  },
+  {
+    id: "addon_ferrero_rocher",
+    name: "Ferrero Rocher Gift Box (24 pcs)",
+    price: 499,
+    image: "/public/products/chocolate_ferrero_rocher.jpg"
+  }
+];
 
 // Clean list of occasions starts empty to avoid unverified placeholders
 export const OCCASIONS: Occasion[] = [];
