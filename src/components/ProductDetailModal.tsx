@@ -220,7 +220,7 @@ export default function ProductDetailModal({
                                 className="w-full py-1 bg-white hover:bg-[#F9FAEE] border border-rose-500 hover:border-rose-600 text-rose-600 font-extrabold text-[9px] uppercase tracking-wider rounded-sm text-center transition-colors cursor-pointer"
                                 id={`modal-addon-addbtn-${addon.id}`}
                               >
-                                + Add
+                                + ADD
                               </button>
                             )}
                           </div>

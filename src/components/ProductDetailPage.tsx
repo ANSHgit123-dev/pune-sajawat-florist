@@ -847,7 +847,7 @@ export default function ProductDetailPage({
                               onClick={() => handleModifyAddon(ad.id, 1)}
                               className="w-full py-1 bg-white hover:bg-[#82862F]/5 text-[#82862F] text-[10px] font-black uppercase rounded-lg border-2 border-stone-200 hover:border-[#82862F] cursor-pointer text-center transition-colors"
                             >
-                              + Add
+                              + ADD
                             </button>
                           )}
                         </div>

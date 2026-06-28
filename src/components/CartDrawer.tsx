@@ -578,7 +578,7 @@ export default function CartDrawer({
                                     className="w-full py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[8px] font-extrabold uppercase rounded border border-rose-200/50 cursor-pointer text-center transition-colors"
                                     id={`addon-quickadd-${addon.id}`}
                                   >
-                                    + Add
+                                    + ADD
                                   </button>
                                 )}
                               </div>
