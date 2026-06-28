@@ -36,7 +36,10 @@ const CATEGORY_DISPLAY_ORDER = [
   "Birthday Bouquets",
   "Anniversary Bouquets",
   "Chocolate Bouquets",
-  "Gift Hampers"
+  "Gift Hampers",
+  "Indoor Plants",
+  "Succulents",
+  "Flowering Plants"
 ];
 
 // Category SVG icons matching the Categories component
@@ -91,6 +94,22 @@ const NavCategoryIcons: { [key: string]: React.ReactNode } = {
       <path d="M12 8v12"/>
       <path d="M12 8c-2-3-6-3-6 0"/>
       <path d="M12 8c2-3 6-3 6 0"/>
+    </svg>
+  ),
+  "Indoor Plants": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M12 2v8M8 12c-1.5-1.5-4-1.5-5 0M12 12c1.5-1.5 4-1.5 5 0M9 16h6v4H9z" />
+    </svg>
+  ),
+  "Succulents": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M12 2v20M17 8a4 4 0 0 0-4 4v2a4 4 0 0 0 4 4M7 6a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4" />
+    </svg>
+  ),
+  "Flowering Plants": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M12 22V12M12 12c-2-2-5-2-7 0M12 12c2-2 5-2 7 0" />
+      <circle cx="12" cy="7" r="3" />
     </svg>
   ),
 };

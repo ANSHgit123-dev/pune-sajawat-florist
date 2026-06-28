@@ -35,6 +35,9 @@ const CATEGORY_EMOJIS: { [key: string]: string } = {
   "Teddy Bears": "🧸",
   "Cakes": "🍰",
   "Plants": "🌿",
+  "Indoor Plants": "🪴",
+  "Succulents": "🌵",
+  "Flowering Plants": "🌺",
   "Decorations": "🎈",
   "Wedding": "💍"
 };
@@ -132,6 +135,24 @@ const CATEGORY_ICONS: { [key: string]: React.ReactNode } = {
       <path d="M12 16c-2-2-4.5-2-6 0M12 16c2-2 4.5-2 6 0" />
     </svg>
   ),
+  "Indoor Plants": (
+    <svg className="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22V12M12 12c-2-2.5-5-2.5-7 0M12 12c2-2.5 5-2.5 7 0" />
+      <path d="M12 16c-2-2-4.5-2-6 0M12 16c2-2 4.5-2 6 0" />
+      <rect x="9" y="18" width="6" height="4" rx="1" />
+    </svg>
+  ),
+  "Succulents": (
+    <svg className="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v20M17 8a4 4 0 0 0-4 4v2a4 4 0 0 0 4 4M7 6a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4" />
+    </svg>
+  ),
+  "Flowering Plants": (
+    <svg className="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22V12M12 12c-2-2-5-2-7 0M12 12c2-2 5-2 7 0" />
+      <circle cx="12" cy="7" r="3" />
+    </svg>
+  ),
   "Decorations": (
     <svg className="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2a5 5 0 0 1 5 5c0 4-5 9-5 9s-5-5-5-5a5 5 0 0 1 5-5z" />
@@ -166,6 +187,9 @@ const ROUTE_TO_CAT_MAP: { [key: string]: string } = {
   "/teddy-bears": "Teddy Bears",
   "/cakes": "Cakes",
   "/plants": "Plants",
+  "/indoor-plants": "Indoor Plants",
+  "/succulents": "Succulents",
+  "/flowering-plants": "Flowering Plants",
   "/decorations": "Decorations",
   "/wedding": "Wedding"
 };
@@ -182,6 +206,9 @@ const CAT_TO_ROUTE_MAP: { [key: string]: string } = {
   "Teddy Bears": "/teddy-bears",
   "Cakes": "/cakes",
   "Plants": "/plants",
+  "Indoor Plants": "/indoor-plants",
+  "Succulents": "/succulents",
+  "Flowering Plants": "/flowering-plants",
   "Decorations": "/decorations",
   "Wedding": "/wedding"
 };
