@@ -88,8 +88,9 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   const [productCategory, setProductCategory] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [longDesc, setLongDesc] = useState("");
-  const [price, setPrice] = useState<number>(0);
-  const [originalPrice, setOriginalPrice] = useState<number>(0);
+  // String states allow clean UX (no leading-zero bug, empty-on-backspace)
+  const [price, setPrice] = useState<string>("0");
+  const [originalPrice, setOriginalPrice] = useState<string>("0");
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState<number>(10);
@@ -174,9 +175,11 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
 
   // Helper auto-calculate discount/originalPrice
   useEffect(() => {
-    if (originalPrice > 0 && price > 0) {
-      const diff = originalPrice - price;
-      const pct = Math.round((diff / originalPrice) * 100);
+    const p = Number(price);
+    const op = Number(originalPrice);
+    if (op > 0 && p > 0) {
+      const diff = op - p;
+      const pct = Math.round((diff / op) * 100);
       setDiscountPercent(pct > 0 ? pct : 0);
     } else {
       setDiscountPercent(0);
@@ -343,8 +346,8 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       setProductCategory(product.category);
       setShortDesc(product.shortDescription || "");
       setLongDesc(product.longDescription || product.description || "");
-      setPrice(product.price);
-      setOriginalPrice(product.originalPrice);
+      setPrice(String(product.price));
+      setOriginalPrice(String(product.originalPrice || product.price));
       setSku(product.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`);
       setQuantity(product.quantity ?? 10);
       setLowStockAlert(product.lowStockAlert ?? 3);
@@ -385,8 +388,8 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       setProductCategory(cmsSettings.sections[0]?.name || "Bouquets");
       setShortDesc("");
       setLongDesc("");
-      setPrice(0);
-      setOriginalPrice(0);
+      setPrice("0");
+      setOriginalPrice("0");
       setSku(`SKU-${Math.floor(10000 + Math.random() * 90000)}`);
       setQuantity(10);
       setLowStockAlert(3);
@@ -443,7 +446,7 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   // Save/Commit Product to JSON
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productName.trim() || price <= 0 || uploadedImages.length === 0) {
+    if (!productName.trim() || Number(price) <= 0 || uploadedImages.length === 0) {
       alert("Please enter a valid product name, price, and upload at least 1 image cover!");
       return;
     }
@@ -1547,10 +1550,21 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                   <div className="space-y-1">
                     <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Original Price (M.R.P.)</label>
                     <input
-                      type="number"
-                      min={0}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={originalPrice}
-                      onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.select();
+                      }}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9]/g, "");
+                        setOriginalPrice(raw);
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value === "" || e.target.value === "0") setOriginalPrice("0");
+                        else setOriginalPrice(String(Number(e.target.value)));
+                      }}
                       className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono"
                     />
                   </div>
@@ -1561,11 +1575,22 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                   <div className="space-y-1">
                     <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block font-sans">Final Selling Price (₹)</label>
                     <input
-                      type="number"
-                      min={0}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       required
                       value={price}
-                      onChange={(e) => setPrice(Number(e.target.value))}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") e.target.select();
+                      }}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9]/g, "");
+                        setPrice(raw);
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value === "" || e.target.value === "0") setPrice("0");
+                        else setPrice(String(Number(e.target.value)));
+                      }}
                       className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono text-[#82862F] font-bold"
                     />
                   </div>
