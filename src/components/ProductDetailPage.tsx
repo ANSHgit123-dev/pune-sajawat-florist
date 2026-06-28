@@ -167,14 +167,8 @@ export default function ProductDetailPage({
   };
 
   const addonsSubtotal = Object.entries(localAddons).reduce((acc, [addonId, qty]) => {
-    let price = 0;
-    const attachedAddon = product.addons?.find((a) => a.id === addonId);
-    if (attachedAddon) {
-      price = attachedAddon.price;
-    } else if (addonId === "a1" || addonId === "fallback_silk") price = 100;
-    else if (addonId === "a3" || addonId === "fallback_teddy") price = 199;
-    else if (addonId === "addon_hamper") price = 499;
-    else if (addonId === "a5" || addonId === "fallback_card") price = 50;
+    const template = ADDONS.find((a) => a.id === addonId);
+    const price = template ? template.price : 0;
     return acc + price * (qty as number);
   }, 0);
 
@@ -233,17 +227,10 @@ export default function ProductDetailPage({
     if (activeAddons.length > 0) {
       text += `\n*Selected Add-ons:*\n`;
       activeAddons.forEach(([id, qty]) => {
-        let name = "Addon";
-        let pr = 0;
-        const attachedAddon = product.addons?.find((a) => a.id === id);
-        if (attachedAddon) {
-          name = attachedAddon.name;
-          pr = attachedAddon.price;
-        } else if (id === "a1" || id === "fallback_silk") { name = "Dairy Milk Silk"; pr = 100; }
-        else if (id === "a3" || id === "fallback_teddy") { name = "Teddy Bear Duo"; pr = 199; }
-        else if (id === "addon_hamper") { name = "Gift Hamper"; pr = 499; }
-        else if (id === "a5" || id === "fallback_card") { name = "Greeting Card"; pr = 50; }
-        text += `- *${name}* x${qty} (₹${pr * (qty as number)})\n`;
+        const ad = ADDONS.find((a) => a.id === id);
+        if (ad) {
+          text += `- *${ad.name}* x${qty} (₹${ad.price * (qty as number)})\n`;
+        }
       });
     }
 
@@ -809,26 +796,10 @@ export default function ProductDetailPage({
 
                 {/* Horizontal row list of custom defined addons */}
                 <div className="flex gap-3 overflow-x-auto pb-3 pt-0.5 scrollbar-thin scrollbar-thumb-stone-200 snap-x">
-                  {(product.addons && product.addons.length > 0
-                    ? product.addons.filter((ad) => ad.enabled)
-                    : [
-                        { id: "fallback_silk", name: "Dairy Milk Silk", price: 100, category: "chocolates" as const, enabled: true, image: product.image },
-                        { id: "fallback_teddy", name: "Teddy Bear", price: 199, category: "teddies" as const, enabled: true, image: product.image },
-                        { id: "addon_hamper", name: "Gift Hamper", price: 499, category: "hampers" as const, enabled: true, image: product.image },
-                        { id: "fallback_card", name: "Greeting Card", price: 50, category: "cards" as const, enabled: true, image: product.image }
-                      ]
-                  ).map((ad) => {
+                  {ADDONS.map((ad) => {
                     const qty = localAddons[ad.id] || 0;
                     const getAddonEmoji = (cat: string) => {
-                      switch (cat) {
-                        case "chocolates": return "🍫";
-                        case "teddies": return "🧸";
-                        case "cards": return "💌";
-                        case "hampers": return "🎁";
-                        case "balloons": return "🎈";
-                        case "cakes": return "🎂";
-                        default: return "🎁";
-                      }
+                      return "🍫";
                     };
                     return (
                       <div
@@ -840,10 +811,10 @@ export default function ProductDetailPage({
                             <img src={ad.image} alt={ad.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-stone-100 text-stone-600 text-base font-bold">
-                              {getAddonEmoji(ad.category)}
+                              {getAddonEmoji("chocolates")}
                             </div>
                           )}
-                          <span className="absolute top-1 left-1 text-xs">{getAddonEmoji(ad.category)}</span>
+                          <span className="absolute top-1 left-1 text-xs">{getAddonEmoji("chocolates")}</span>
                         </div>
                         
                         <div className="space-y-0.5">
@@ -913,20 +884,12 @@ export default function ProductDetailPage({
 
                   {/* Addons detailed individual rates list */}
                   {Object.entries(localAddons).map(([id, qty]) => {
-                    let name = "Addon Upgrade";
-                    let priceRate = 0;
-                    const attachedAddon = product.addons?.find((a) => a.id === id);
-                    if (attachedAddon) {
-                      name = attachedAddon.name;
-                      priceRate = attachedAddon.price;
-                    } else if (id === "a1" || id === "fallback_silk") { name = "Dairy Milk Silk"; priceRate = 100; }
-                    else if (id === "a3" || id === "fallback_teddy") { name = "Teddy Bear Cute"; priceRate = 199; }
-                    else if (id === "addon_hamper") { name = "Gift Hamper"; priceRate = 499; }
-                    else if (id === "a5" || id === "fallback_card") { name = "Greeting Card"; priceRate = 50; }
+                    const ad = ADDONS.find((a) => a.id === id);
+                    if (!ad) return null;
                     return (
                       <div key={id} className="flex justify-between items-center text-stone-500 text-[11px] pl-2 border-l border-stone-200">
-                        <span>• {name} (Qty {qty})</span>
-                        <span className="font-mono font-bold">₹{priceRate * (qty as number)}</span>
+                        <span>• {ad.name} (Qty {qty})</span>
+                        <span className="font-mono font-bold">₹{ad.price * (qty as number)}</span>
                       </div>
                     );
                   })}

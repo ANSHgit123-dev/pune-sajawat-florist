@@ -152,25 +152,10 @@ export default function ProductDetailModal({
                   </div>
 
                   <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x" id="recommended-addons-tray">
-                    {(product.addons && product.addons.length > 0
-                      ? product.addons.filter((ad) => ad.enabled)
-                      : [
-                          { id: "fallback_silk", name: "Dairy Milk Silk", price: 100, category: "chocolates" as const, enabled: true, image: product.image },
-                          { id: "fallback_teddy", name: "Teddy Bear Cute", price: 199, category: "teddies" as const, enabled: true, image: product.image },
-                          { id: "fallback_card", name: "Greeting Note Card", price: 50, category: "cards" as const, enabled: true, image: product.image }
-                        ]
-                    ).map((addon) => {
+                    {ADDONS.map((addon) => {
                       const qty = selectedAddons[addon.id] || 0;
                       const getAddonEmoji = (cat: string) => {
-                        switch (cat) {
-                          case "chocolates": return "🍫";
-                          case "teddies": return "🧸";
-                          case "cards": return "💌";
-                          case "hampers": return "🎁";
-                          case "balloons": return "🎈";
-                          case "cakes": return "🎂";
-                          default: return "🎁";
-                        }
+                        return "🍫";
                       };
 
                       return (
@@ -192,11 +177,11 @@ export default function ProductDetailModal({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-stone-100 text-stone-600 text-xl font-bold">
-                                {getAddonEmoji(addon.category)}
+                                {getAddonEmoji("chocolates")}
                               </div>
                             )}
                             <div className="absolute top-1 left-1 bg-black/60 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold">
-                              {getAddonEmoji(addon.category)}
+                              {getAddonEmoji("chocolates")}
                             </div>
                             {qty > 0 && (
                               <div className="absolute top-1 right-1 bg-rose-600 text-white rounded-full p-0.5 shadow-sm border border-white">
