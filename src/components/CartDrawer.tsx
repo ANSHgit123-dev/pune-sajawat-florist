@@ -79,12 +79,6 @@ export default function CartDrawer({
     return typeConfig ? typeConfig.charge : 0;
   };
 
-  // Distance Charge mapping from dynamic settings
-  const getDistanceFee = () => {
-    const areaConfig = settings.areas.find(a => a.name === deliveryArea);
-    return areaConfig ? areaConfig.charge : 0;
-  };
-
   const getDeliveryLabel = () => {
     const typeConfig = settings.types.find(t => t.id === deliveryType);
     const chargeVal = typeConfig ? typeConfig.charge : 0;
@@ -106,8 +100,8 @@ export default function CartDrawer({
   };
 
   const deliveryCost = getDeliveryFee(); // Selected type cost
-  const distanceCost = getDistanceFee(); // Selected area cost
-  const finalTotal = itemsSubtotal + addonsSubtotal + deliveryCost + distanceCost;
+  // Delivery is free for all Pune & PCMC areas — no distance surcharge
+  const finalTotal = itemsSubtotal + addonsSubtotal + deliveryCost;
 
 
   const isFormValid =
@@ -680,7 +674,7 @@ export default function CartDrawer({
                           >
                             {settings.areas.map((area) => (
                               <option key={area.name + "_" + area.postcode} value={area.name}>
-                                {area.name} {area.charge > 0 ? `(₹${area.charge})` : ""}
+                                {area.name}
                               </option>
                             ))}
                           </select>
@@ -770,16 +764,9 @@ export default function CartDrawer({
                         </div>
 
                         <div className="flex justify-between items-center text-stone-500 font-sans">
-                          <span>Delivery Method</span>
-                          <span className="font-mono text-stone-900 font-bold">
-                            {deliveryCost === 0 ? "Free" : `₹${deliveryCost}`}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between items-center text-stone-500 font-sans">
-                          <span>Distance Charge ({deliveryArea})</span>
-                          <span className="font-mono text-stone-900 font-bold">
-                            {distanceCost === 0 ? "Free" : `₹${distanceCost}`}
+                          <span>Delivery</span>
+                          <span className="font-mono text-emerald-600 font-bold">
+                            {deliveryCost === 0 ? "Free ✓" : `₹${deliveryCost}`}
                           </span>
                         </div>
 
@@ -862,15 +849,9 @@ export default function CartDrawer({
                       <span className="font-mono text-stone-850 font-bold">₹{addonsSubtotal}</span>
                     </div>
                     <div className="flex justify-between text-stone-500 font-sans">
-                      <span>Delivery Option</span>
-                      <span className="font-mono text-stone-850 font-bold">
-                        {deliveryCost === 0 ? "Free" : `₹${deliveryCost}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-stone-500 font-sans">
-                      <span>Distance Charge ({deliveryArea})</span>
-                      <span className="font-mono text-stone-850 font-bold">
-                        {distanceCost === 0 ? "Free" : `₹${distanceCost}`}
+                      <span>Delivery</span>
+                      <span className="font-mono text-emerald-600 font-bold">
+                        {deliveryCost === 0 ? "Free ✓" : `₹${deliveryCost}`}
                       </span>
                     </div>
                   </div>
