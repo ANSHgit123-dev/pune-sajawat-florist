@@ -13,7 +13,7 @@ export const ADDONS: Addon[] = [
     id: "addon_kitkat",
     name: "KitKat Chocolate Bar",
     price: 40,
-    image: "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/addon_kitkat_1782667604485.jpg"
+    image: "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/addon_kitkat_1782667625259.jpg"
   },
   {
     id: "addon_snickers",
@@ -25,7 +25,7 @@ export const ADDONS: Addon[] = [
     id: "addon_cadbury_dairy_milk",
     name: "Cadbury Dairy Milk (Maha Pack)",
     price: 55,
-    image: "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/addon_cadbury_dairy_milk_1782667625259.jpg"
+    image: "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/addon_cadbury_dairy_milk_1782667604485.jpg"
   },
   {
     id: "addon_ferrero_rocher",
