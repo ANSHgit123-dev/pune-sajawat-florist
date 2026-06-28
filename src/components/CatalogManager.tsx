@@ -128,6 +128,11 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   const [imageUploadLogs, setImageUploadLogs] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Save / delete UX states
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sectionBannerInputRef = useRef<HTMLInputElement>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -443,13 +448,14 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
     setAttachedAddons(attachedAddons.filter(a => a.id !== addonId));
   };
 
-  // Save/Commit Product to JSON
+  // Save/Commit Product to DB
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productName.trim() || Number(price) <= 0 || uploadedImages.length === 0) {
       alert("Please enter a valid product name, price, and upload at least 1 image cover!");
       return;
     }
+    setIsSaving(true);
 
     const coverUrl = uploadedImages[coverImageIndex] || uploadedImages[0];
     const productPayload: Product = {
@@ -465,13 +471,11 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       rating: editingProduct ? editingProduct.rating : 5.0,
       reviewsCount: editingProduct ? editingProduct.reviewsCount : 1,
       description: shortDesc.trim() || productName.trim(),
-      
       shortDescription: shortDesc.trim(),
       longDescription: longDesc.trim(),
       sku: sku.trim(),
       quantity: Number(quantity),
       lowStockAlert: Number(lowStockAlert),
-      
       isBestSeller,
       isNew,
       isTrending,
@@ -479,7 +483,6 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       isFeatured,
       isEnabled,
       isHidden,
-      
       deliverySettings: {
         available: delAvailable,
         charge: Number(delCharge),
@@ -501,12 +504,11 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       updatedProducts = [...products, productPayload];
     }
 
-    // Save to server
     try {
       const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/bulk", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-CSRF-Token": csrfToken
         },
@@ -515,22 +517,31 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
       if (res.ok) {
         onProductsUpdated(updatedProducts);
         setShowProductModal(false);
+        setSaveToast(true);
+        setTimeout(() => setSaveToast(false), 2200);
       } else {
         alert("Failed to save product in database.");
       }
     } catch (e) {
       console.error(e);
       alert("Failed to save product on server.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product? This is permanent.")) return;
+  const handleDeleteProduct = (productId: string) => {
+    // Open custom confirm dialog instead of native confirm()
+    setDeleteConfirmId(productId);
+  };
+
+  const executeDeleteProduct = async (productId: string) => {
+    setDeleteConfirmId(null);
     try {
       const csrfToken = sessionStorage.getItem("sajawat_csrf_token") || "";
       const res = await fetch("/api/products/delete", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-CSRF-Token": csrfToken
         },
@@ -708,26 +719,30 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
     });
   };
 
-  // Search Filter compile
+  // Search Filter — searches name, category, SKU, description, short desc, long desc
   const filteredProducts = products.filter(p => {
     const nameStr = p.name || p.title || "";
     const catStr = p.category || "";
     const skuStr = p.sku || "";
     const descStr = p.description || "";
+    const shortStr = p.shortDescription || "";
+    const longStr = p.longDescription || "";
     const query = searchQuery.trim().toLowerCase();
 
-    const matchesSearch = !query || 
+    const matchesSearch = !query ||
       nameStr.toLowerCase().includes(query) ||
       catStr.toLowerCase().includes(query) ||
       skuStr.toLowerCase().includes(query) ||
-      descStr.toLowerCase().includes(query);
+      descStr.toLowerCase().includes(query) ||
+      shortStr.toLowerCase().includes(query) ||
+      longStr.toLowerCase().includes(query);
 
     const matchesCategory = filterCategory === "All" || catStr === filterCategory;
-    
+
     let matchesStatus = true;
     const isOutOfStock = (p.quantity ?? 0) <= 0;
     const isLowStock = !isOutOfStock && (p.quantity ?? 0) <= (p.lowStockAlert ?? 3);
-    
+
     if (filterStatus === "enabled") matchesStatus = p.isEnabled !== false;
     else if (filterStatus === "disabled") matchesStatus = p.isEnabled === false;
     else if (filterStatus === "hidden") matchesStatus = p.isHidden === true;
@@ -740,11 +755,50 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
   return (
     <div className="bg-stone-900 min-h-[90vh] text-stone-150 font-sans p-6 rounded-3xl border border-stone-800 shadow-2xl relative overflow-hidden" id="pune-cms-manager">
       
+      {/* Save toast */}
+      {saveToast && (
+        <div className="fixed top-20 right-6 bg-emerald-600 text-white border border-emerald-500/40 p-4 rounded-xl flex items-center gap-2.5 z-999 shadow-2xl animate-fade-in text-xs font-bold uppercase tracking-wider">
+          <Check className="w-4 h-4" />
+          <span>✓ Product saved successfully</span>
+        </div>
+      )}
+
       {/* CMS Success feedback message */}
       {sectionSuccessMsg && (
         <div className="fixed top-20 right-6 bg-[#82862F] text-white border border-[#F9FAEE]/25 p-4 rounded-xl flex items-center gap-2.5 z-999 shadow-2xl animate-fade-in text-xs font-bold uppercase tracking-wider">
           <CheckCircle className="w-5 h-5" />
           <span>{sectionSuccessMsg}</span>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/75 z-[9999] flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 font-sans">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-rose-950 border border-rose-800 rounded-full flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Delete this product?</h4>
+                <p className="text-[11px] text-stone-400 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => executeDeleteProduct(deleteConfirmId)}
+                className="flex-1 py-2.5 bg-rose-700 hover:bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1501,105 +1555,52 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                     onChange={(e) => setProductCategory(e.target.value)}
                     className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-stone-200 outline-none font-bold"
                   >
-                    {cmsSettings.sections.map(s => (
-                      <option key={s.id} value={s.name}>{s.name}</option>
-                    ))}
+                    {[...cmsSettings.sections]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(s => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
                     {cmsSettings.sections.length === 0 && (
                       <option value="Bouquets">Bouquets</option>
                     )}
                   </select>
                 </div>
 
-                {/* SKU */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">SKU Code</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. SKU-83210"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white placeholder-stone-700 outline-none font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Stock Qty</label>
-                    <input
-                      type="number"
-                      required
-                      min={0}
-                      value={quantity}
-                      onChange={(e) => setQuantity(Number(e.target.value))}
-                      className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono"
-                    />
-                  </div>
+                {/* Stock Quantity */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Stock Quantity</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono"
+                  />
                 </div>
 
-                {/* Alert threshold */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Low Stock Alert Level</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={lowStockAlert}
-                      onChange={(e) => setLowStockAlert(Number(e.target.value))}
-                      className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Original Price (M.R.P.)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={originalPrice}
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.select();
-                      }}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/[^0-9]/g, "");
-                        setOriginalPrice(raw);
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value === "" || e.target.value === "0") setOriginalPrice("0");
-                        else setOriginalPrice(String(Number(e.target.value)));
-                      }}
-                      className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Final Price & discount */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block font-sans">Final Selling Price (₹)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      required
-                      value={price}
-                      onFocus={(e) => {
-                        if (e.target.value === "0") e.target.select();
-                      }}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/[^0-9]/g, "");
-                        setPrice(raw);
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value === "" || e.target.value === "0") setPrice("0");
-                        else setPrice(String(Number(e.target.value)));
-                      }}
-                      className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono text-[#82862F] font-bold"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block">Auto Discount Badge (%)</label>
-                    <div className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-stone-450 font-mono flex items-center h-9">
-                      <strong>{discountPercent}% Off</strong>
-                    </div>
-                  </div>
+                {/* Final Selling Price — full width */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-stone-400 uppercase tracking-wider font-extrabold block font-sans">Final Selling Price (₹)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    required
+                    value={price}
+                    onFocus={(e) => {
+                      if (e.target.value === "0") e.target.select();
+                    }}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, "");
+                      setPrice(raw);
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === "" || e.target.value === "0") setPrice("0");
+                      else setPrice(String(Number(e.target.value)));
+                    }}
+                    className="w-full bg-stone-950 border border-stone-850 rounded-xl px-3 py-2.5 text-xs text-white outline-none font-mono text-[#82862F] font-bold"
+                  />
                 </div>
 
                 {/* Descriptions */}
@@ -1626,18 +1627,18 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                 </div>
               </div>
 
-              {/* RIGHT SIDE FORM BLOCK (Images, Delivery overrides, Addons) */}
+              {/* RIGHT SIDE FORM BLOCK (Images + Status switches) */}
               <div className="space-y-6">
-                
+
                 {/* Images Manager */}
                 <div className="bg-stone-950/50 border border-stone-850 rounded-2xl p-4.5 space-y-3">
                   <div className="flex justify-between items-center border-b border-stone-850 pb-2">
-                    <label className="text-[10.5px] text-stone-400 uppercase tracking-wider font-extrabold block">Product Images Cover Manager</label>
+                    <label className="text-[10.5px] text-stone-400 uppercase tracking-wider font-extrabold block">Product Images</label>
                     <span className="text-[9px] text-[#82862F] bg-[#82862F]/10 px-1.5 py-0.2 rounded font-black font-mono">Cover: #{coverImageIndex + 1}</span>
                   </div>
 
                   {uploadedImages.length > 0 ? (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {uploadedImages.map((url, i) => (
                         <div key={i} className={`relative aspect-square bg-stone-950 rounded-lg overflow-hidden border-2 transition-all ${
                           coverImageIndex === i ? "border-[#82862F] ring-2 ring-[#82862F]/20" : "border-stone-800"
@@ -1661,7 +1662,7 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-stone-500 italic text-center py-4">No images uploaded. Add photos from products list below or drag files.</p>
+                    <p className="text-[10px] text-stone-500 italic text-center py-4">No images uploaded. Add photos below.</p>
                   )}
 
                   {/* Upload button wrapper */}
@@ -1689,170 +1690,30 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
                   </div>
                 </div>
 
-                {/* Product settings switches */}
+                {/* Product status switches — simplified for owner */}
                 <div className="bg-stone-950/50 border border-stone-850 rounded-2xl p-4.5 space-y-2 select-none text-[10.5px] text-stone-300 font-bold uppercase">
-                  <span className="text-[10px] text-stone-400 tracking-wider block border-b border-stone-850 pb-2">Status Product Settings</span>
-                  
-                  <div className="grid grid-cols-2 gap-2 pt-1 font-sans">
-                    <label className="flex items-center gap-2 cursor-pointer py-1">
-                      <input 
-                        type="checkbox" 
-                        checked={isBestSeller}
-                        onChange={(e) => setIsBestSeller(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>Best Seller (Trending)</span>
-                    </label>
+                  <span className="text-[10px] text-stone-400 tracking-wider block border-b border-stone-850 pb-2">Product Status</span>
 
-                    <label className="flex items-center gap-2 cursor-pointer py-1">
-                      <input 
-                        type="checkbox" 
-                        checked={isNew}
-                        onChange={(e) => setIsNew(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>New Arrival</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer py-1">
-                      <input 
-                        type="checkbox" 
-                        checked={isTrending}
-                        onChange={(e) => setIsTrending(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>Trending list</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer py-1">
-                      <input 
-                        type="checkbox" 
-                        checked={isRecommended}
-                        onChange={(e) => setIsRecommended(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>Recommended addon</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer py-1">
-                      <input 
-                        type="checkbox" 
-                        checked={isFeatured}
-                        onChange={(e) => setIsFeatured(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>Featured Product</span>
-                    </label>
-
+                  <div className="flex flex-col gap-2 pt-1 font-sans">
                     <label className="flex items-center gap-2 cursor-pointer py-1 text-emerald-400">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={isEnabled}
                         onChange={(e) => setIsEnabled(e.target.checked)}
-                        className="text-emerald-500 focus:ring-0 rounded border-stone-800" 
+                        className="text-emerald-500 focus:ring-0 rounded border-stone-800"
                       />
                       <span>Enable Product (Active)</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer py-1 text-rose-400">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={isHidden}
                         onChange={(e) => setIsHidden(e.target.checked)}
-                        className="text-rose-500 focus:ring-0 rounded border-stone-800" 
+                        className="text-rose-500 focus:ring-0 rounded border-stone-800"
                       />
                       <span>Hide Product</span>
                     </label>
-                  </div>
-                </div>
-
-                {/* Product level delivery overrides */}
-                <div className="bg-stone-950/50 border border-stone-850 rounded-2xl p-4.5 space-y-3.5 select-none text-[10px] text-stone-300 font-bold uppercase">
-                  <span className="text-[10px] text-stone-400 tracking-wider block border-b border-stone-850 pb-2">Custom Product Delivery Settings</span>
-                  
-                  <div className="space-y-3 font-sans">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={delAvailable}
-                        onChange={(e) => setDelAvailable(e.target.checked)}
-                        className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                      />
-                      <span>Concierge Delivery Available</span>
-                    </label>
-
-                    {delAvailable && (
-                      <div className="pl-6 space-y-3 border-l-2 border-stone-850/80">
-                        <div className="grid grid-cols-2 gap-3">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={delSameday}
-                              onChange={(e) => setDelSameday(e.target.checked)}
-                              className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                            />
-                            <span>Same Day Delivery</span>
-                          </label>
-
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={delFixed}
-                              onChange={(e) => setDelFixed(e.target.checked)}
-                              className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                            />
-                            <span>Fixed Time Delivery</span>
-                          </label>
-
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={delNight}
-                              onChange={(e) => setDelNight(e.target.checked)}
-                              className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                            />
-                            <span>Night Delivery</span>
-                          </label>
-
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={delMidnight}
-                              onChange={(e) => setDelMidnight(e.target.checked)}
-                              className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                            />
-                            <span>Midnight Delivery</span>
-                          </label>
-                        </div>
-
-                        {/* Charges */}
-                        <div className="pt-2 space-y-2 border-t border-stone-850/50">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={delCustomChargeEnabled}
-                              onChange={(e) => setDelCustomChargeEnabled(e.target.checked)}
-                              className="text-[#82862F] focus:ring-0 rounded border-stone-800" 
-                            />
-                            <span>Specify custom charges</span>
-                          </label>
-
-                          {delCustomChargeEnabled ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-stone-500">Custom Fee (₹):</span>
-                              <input
-                                type="number"
-                                value={delCustomCharge}
-                                onChange={(e) => setDelCustomCharge(Number(e.target.value))}
-                                className="bg-stone-900 border border-stone-800 text-white text-[11px] px-2 py-1 w-20 rounded font-mono outline-none"
-                              />
-                            </div>
-                          ) : (
-                            <span className="text-[9px] text-stone-500 italic lowercase">uses default area config delivery settings</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -1962,16 +1823,18 @@ export default function CatalogManager({ products, onProductsUpdated, onBack }: 
               <button
                 type="button"
                 onClick={() => setShowProductModal(false)}
-                className="px-5 py-2.5 bg-stone-950 hover:bg-stone-900 border border-stone-850 rounded-xl text-stone-400 hover:text-white cursor-pointer"
+                disabled={isSaving}
+                className="px-5 py-2.5 bg-stone-950 hover:bg-stone-900 border border-stone-850 rounded-xl text-stone-400 hover:text-white cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-[#82862F] hover:bg-[#6C7026] text-white rounded-xl cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#82862F]/10 active:scale-98"
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-[#82862F] hover:bg-[#6C7026] text-white rounded-xl cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#82862F]/10 active:scale-98 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Check className="w-4.5 h-4.5" />
-                <span>Save Catalog product</span>
+                <span>{isSaving ? "Saving..." : "Save Product"}</span>
               </button>
             </div>
           </form>

@@ -839,36 +839,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             🖼️ Media Manager
           </button>
           <button
-            onClick={() => setAdminTab("settings")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "settings"
-              ? "bg-[#82862F] text-white shadow-sm"
-              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-              }`}
-            id="tab-btn-settings"
-          >
-            ⚙️ Delivery Settings
-          </button>
-          <button
-            onClick={() => setAdminTab("backups")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "backups"
-              ? "bg-[#82862F] text-white shadow-sm"
-              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-              }`}
-            id="tab-btn-backups"
-          >
-            🛡️ Safety & Backups
-          </button>
-          <button
-            onClick={() => setAdminTab("catalog")}
-            className={`py-2.5 text-center text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${adminTab === "catalog"
-              ? "bg-[#82862F] text-white shadow-sm"
-              : "text-stone-500 hover:text-stone-800 hover:bg-stone-50/80"
-              }`}
-            id="tab-btn-catalog"
-          >
-            📸 Auto-Catalog Builder
-          </button>
-          <button
             onClick={() => {
               window.history.pushState({}, "", "/admin/upload");
               window.dispatchEvent(new Event("popstate"));
@@ -876,36 +846,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             className="py-2.5 text-center text-[10.5px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-white shadow-sm"
             id="tab-btn-real-upload"
           >
-            🚀 Inventory Upload Panel
+            🚀 Upload Products
           </button>
         </div>
 
-        {/* NOTIFICATIONS CORNER FOR IMMINENT DELIVERIES */}
-        <div className="space-y-2" id="admin-notification-ticker">
-          {orders.some(o => o.deliveryDate === todayStr && o.status !== "Delivered" && o.status !== "Cancelled") && (
-            <div className="bg-amber-50 border border-amber-200/80 p-3.5 rounded-xl flex items-start gap-2.5 font-sans animate-pulse shadow-sm">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <h5 className="text-xs font-bold text-amber-800 uppercase tracking-wider">⚠️ Action Required: Deliver Today ({todayStr})</h5>
-                <p className="text-[10.5px] text-amber-700 leading-normal mt-0.5 font-medium">
-                  You have orders pending or preparing for today's delivery limit. Dispatch with local Pune riders as scheduled to maintain 5-star customer ratings!
-                </p>
-              </div>
-            </div>
-          )}
-
-          {orders.some(o => o.deliveryDate === tomorrowStr && o.status !== "Delivered" && o.status !== "Cancelled") && (
-            <div className="bg-sky-50 border border-sky-150 p-3.5 rounded-xl flex items-start gap-2.5 font-sans shadow-xs">
-              <Calendar className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
-              <div>
-                <h5 className="text-xs font-bold text-sky-800 uppercase tracking-wider">⏰ Inbound Notice: Delivery Tomorrow ({tomorrowStr})</h5>
-                <p className="text-[10.5px] text-sky-700 leading-normal mt-0.5 font-medium">
-                  Preparation starts tonight. Fresh flower stocks for lilies, premium roses, and baking ingredients should be kept on freeze standby!
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
 
         {adminTab === "orders" && (
           <>
