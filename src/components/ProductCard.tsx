@@ -172,12 +172,11 @@ export default function ProductCard({ product, onAddToCart, onOpenCart, onSelect
                   <span>View Details</span>
                 </button>
                 <button
-                  onClick={handleInstantWhatsApp}
+                  onClick={handleQueueCart}
                   className="py-2 px-2 bg-[#82862F] hover:bg-[#6C7026] text-white font-extrabold text-[10px] uppercase tracking-wider rounded-sm flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-sm"
-                  id={`checkout-whatsapp-btn-${product.id}`}
+                  id={`quick-add-to-cart-btn-${product.id}`}
                 >
-                  <MessageCircle className="w-3.5 h-3.5 fill-white stroke-none shrink-0" />
-                  <span>WhatsApp Order</span>
+                  <span>🛒 Add to Cart</span>
                 </button>
               </div>
             )}

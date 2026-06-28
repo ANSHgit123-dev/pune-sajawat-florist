@@ -1000,7 +1000,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="text-xs font-semibold tracking-tight text-stone-100">
-                Added <span className="text-rose-400 font-bold">"{lastAddedProduct.title}"</span> to basket!
+                ✓ Added to cart
               </span>
             </div>
             <button
