@@ -929,9 +929,12 @@ export default function ProductDetailPage({
                       <span>Add to Basket</span>
                     </button>
 
-                    {/* Button 2: Order instantly on WhatsApp */}
+                    {/* Button 2: Order instantly on WhatsApp → opens cart drawer for full validation */}
                     <button
-                      onClick={triggerWhatsAppDirectLink}
+                      onClick={() => {
+                        handleAddToCartFlow();
+                        onOpenCart();
+                      }}
                       className="w-full py-4 px-4 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98"
                     >
                       <MessageCircle className="w-5 h-5 fill-white stroke-none shrink-0 animate-bounce" />

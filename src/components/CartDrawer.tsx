@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { X, ShoppingBag, Plus, Minus, Gift, MessageCircle, FileText, ScrollText } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, ShoppingBag, Plus, Minus, Gift, MessageCircle, FileText, ScrollText, AlertCircle, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { CartItem } from "../types";
 import { ADDONS } from "../data";
@@ -18,6 +18,57 @@ interface CartDrawerProps {
   onClearAddons: () => void;
 }
 
+// Time Slots Configuration
+const TIME_SLOTS: Record<string, string[]> = {
+  standard: [
+    "10:00 AM – 1:00 PM",
+    "1:00 PM – 4:00 PM",
+    "4:00 PM – 8:00 PM"
+  ],
+  morning: [
+    "7:00 AM – 9:00 AM",
+    "8:00 AM – 10:00 AM",
+    "9:00 AM – 11:00 AM"
+  ],
+  express: [
+    "Within 60 Minutes",
+    "Within 90 Minutes",
+    "Within 2 Hours"
+  ]
+};
+
+// Generate exact times from 10:00 AM to 10:00 PM (15-min intervals)
+const FIXED_TIME_SLOTS: string[] = (() => {
+  const slots: string[] = [];
+  // 10:00 AM to 11:45 AM
+  for (let h = 10; h <= 11; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      slots.push(`${h}:${String(m).padStart(2, '0')} AM`);
+    }
+  }
+  // 12:00 PM to 12:45 PM
+  for (let m = 0; m < 60; m += 15) {
+    slots.push(`12:${String(m).padStart(2, '0')} PM`);
+  }
+  // 1:00 PM to 9:45 PM
+  for (let h = 1; h <= 9; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      slots.push(`${h}:${String(m).padStart(2, '0')} PM`);
+    }
+  }
+  // 10:00 PM
+  slots.push("10:00 PM");
+  return slots;
+})();
+
+const PRE_MIDNIGHT_SLOTS = [
+  "11:00 PM",
+  "11:15 PM",
+  "11:30 PM",
+  "11:45 PM",
+  "11:59 PM"
+];
+
 export default function CartDrawer({
   isOpen,
   onClose,
@@ -32,20 +83,41 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const settings = getDeliverySettings();
 
+  const getFormattedShortDate = (offsetDays: number): { raw: string; display: string } => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    const day = d.getDate();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const m = months[d.getMonth()];
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    return {
+      raw: `${yyyy}-${mm}-${dd}`,
+      display: `${day} ${m}`
+    };
+  };
+
+  const todayObj = getFormattedShortDate(0);
+  const tomorrowObj = getFormattedShortDate(1);
+  const isPastCutoff = new Date().getHours() >= 23;
+
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [deliveryArea, setDeliveryArea] = useState(settings.areas[0]?.name || "Hadapsar");
   const [pincode, setPincode] = useState(settings.areas[0]?.postcode || "411028");
-  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState(() => {
+    return isPastCutoff ? tomorrowObj.raw : todayObj.raw;
+  });
   const [address, setAddress] = useState("");
   
   // Delivery option state
-  const [deliveryType, setDeliveryType] = useState<"standard" | "sameday" | "night" | "midnight" | "fixed">("standard");
+  const [deliveryType, setDeliveryType] = useState<"standard" | "morning" | "express" | "fixed" | "midnight">("standard");
+  const [deliveryTimeSlot, setDeliveryTimeSlot] = useState("");
 
-  // Fixed Time custom slot picker states
-  const [fixedHour, setFixedHour] = useState("06");
-  const [fixedMinute, setFixedMinute] = useState("00");
-  const [fixedPeriod, setFixedPeriod] = useState("PM");
+  // Validation states
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Personal message state
   const [customMessage, setCustomMessage] = useState("");
@@ -55,6 +127,32 @@ export default function CartDrawer({
 
   // Placed Order ID state
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+
+  // Clear slot selection if deliveryType changes or if date rules apply
+  useEffect(() => {
+    const isToday = deliveryDate === todayObj.raw;
+    if (deliveryType === "express" && !isToday) {
+      setDeliveryTimeSlot("");
+    } else if (deliveryType === "midnight" && !isToday) {
+      setDeliveryTimeSlot("");
+    } else {
+      // Validate that current slot belongs to active type
+      if (deliveryType === "fixed") {
+        if (!FIXED_TIME_SLOTS.includes(deliveryTimeSlot)) {
+          setDeliveryTimeSlot("");
+        }
+      } else if (deliveryType === "midnight") {
+        if (!PRE_MIDNIGHT_SLOTS.includes(deliveryTimeSlot)) {
+          setDeliveryTimeSlot("");
+        }
+      } else {
+        const allowed = TIME_SLOTS[deliveryType] || [];
+        if (!allowed.includes(deliveryTimeSlot)) {
+          setDeliveryTimeSlot("");
+        }
+      }
+    }
+  }, [deliveryDate, deliveryType]);
 
   const handleAreaChange = (areaName: string) => {
     setDeliveryArea(areaName);
@@ -73,47 +171,95 @@ export default function CartDrawer({
     return acc + (template ? template.price * qty : 0);
   }, 0);
 
-  // Delivery Charges mapping from dynamic settings
+  // Delivery Charges mapping
   const getDeliveryFee = () => {
-    const typeConfig = settings.types.find(t => t.id === deliveryType);
-    return typeConfig ? typeConfig.charge : 0;
+    switch (deliveryType) {
+      case "standard": return 0;
+      case "morning": return 99;
+      case "express": return 149;
+      case "fixed": return 199;
+      case "midnight": return 299;
+      default: return 0;
+    }
   };
 
   const getDeliveryLabel = () => {
-    const typeConfig = settings.types.find(t => t.id === deliveryType);
-    const chargeVal = typeConfig ? typeConfig.charge : 0;
-    
     switch (deliveryType) {
-      case "standard":
-        return `Standard Delivery (${typeConfig?.timeWindow || "10 AM - 8 PM"})`;
-      case "sameday":
-        return `Same Day Delivery (+₹${chargeVal})`;
-      case "night":
-        return `Night Delivery (+₹${chargeVal})`;
-      case "midnight":
-        return `Midnight Delivery (+₹${chargeVal})`;
-      case "fixed":
-        return `Fixed Time Delivery (At ${fixedHour}:${fixedMinute} ${fixedPeriod}) (+₹${chargeVal})`;
-      default:
-        return "Standard";
+      case "standard": return "Standard Delivery";
+      case "morning": return "Morning Delivery";
+      case "express": return "Express Delivery";
+      case "fixed": return "Fixed Time Delivery";
+      case "midnight": return "Pre-Midnight Delivery";
+      default: return deliveryType;
     }
   };
 
   const deliveryCost = getDeliveryFee(); // Selected type cost
-  // Delivery is free for all Pune & PCMC areas — no distance surcharge
   const finalTotal = itemsSubtotal + addonsSubtotal + deliveryCost;
 
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    const monthIndex = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${day} ${months[monthIndex]}`;
+  };
 
-  const isFormValid =
-    recipientName.trim() !== "" &&
-    recipientPhone.trim() !== "" &&
-    deliveryDate.trim() !== "" &&
-    address.trim() !== "" &&
-    deliveryArea.trim() !== "" &&
-    pincode.trim() !== "";
+  const checkValidation = (): string[] => {
+    const errors: string[] = [];
+    if (!recipientName.trim()) errors.push("recipientName");
+    if (!recipientPhone.trim()) errors.push("recipientPhone");
+    if (!deliveryDate.trim()) errors.push("deliveryDate");
+    if (!deliveryType) errors.push("deliveryType");
+    
+    const isToday = deliveryDate === todayObj.raw;
+    if (deliveryType === "express" && !isToday) {
+      errors.push("deliveryTimeSlot");
+    } else if (deliveryType === "midnight" && !isToday) {
+      errors.push("deliveryTimeSlot");
+    } else if (!deliveryTimeSlot.trim()) {
+      errors.push("deliveryTimeSlot");
+    }
+
+    if (!deliveryArea.trim()) errors.push("deliveryArea");
+    if (!pincode.trim()) errors.push("pincode");
+    if (!address.trim()) errors.push("address");
+    return errors;
+  };
+
+  const isFormValid = checkValidation().length === 0;
 
   const triggerWhatsApp = () => {
-    if (cart.length === 0 || !isFormValid) return;
+    if (cart.length === 0) return;
+
+    setSubmitAttempted(true);
+    const errors = checkValidation();
+    setValidationErrors(errors);
+
+    if (errors.length > 0) {
+      const fieldIdMap: Record<string, string> = {
+        recipientName: "field-recipient-name",
+        recipientPhone: "field-recipient-phone",
+        deliveryDate: "field-delivery-date",
+        deliveryType: "field-delivery-type",
+        deliveryTimeSlot: "field-delivery-time-slot",
+        deliveryArea: "field-delivery-area",
+        pincode: "field-pincode",
+        address: "field-address",
+      };
+
+      const firstError = errors[0];
+      const targetId = fieldIdMap[firstError];
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        const input = element.querySelector("input, select, textarea") as HTMLElement;
+        if (input) input.focus();
+      }
+      return;
+    }
 
     // 1. Fetch current orders and seed initial data if missing
     let existingOrders: any[] = [];
@@ -121,73 +267,9 @@ export default function CartDrawer({
       const saved = localStorage.getItem("sajawat_orders");
       if (saved) {
         existingOrders = JSON.parse(saved);
-      } else {
-        // Build seed data reflecting Today (2026-06-19), Tomorrow (2026-06-20) and other dates for realistic filtering
-        existingOrders = [
-          {
-            id: "PSF-1001",
-            customerName: "Anshuman Godse",
-            phoneNumber: "+91 9881234567",
-            products: [{ title: "Luxe Parisian Rose Box Arrangement", quantity: 1, price: 1299 }],
-            price: 1598, // Including addons and delivery
-            addons: [{ name: "Ferrero Rocher Box", quantity: 1, price: 299 }],
-            deliveryDate: "2026-06-19", // Today
-            deliveryTime: "Midnight Delivery (+₹249)",
-            address: "Apt 402, Clover Highlands, Kondhwa, Pune - 411048",
-            personalMessage: "Happy Anniversary my love! ❤️",
-            status: "Preparing",
-            createdAt: new Date("2026-06-19T05:30:00Z").toISOString()
-          },
-          {
-            id: "PSF-1002",
-            customerName: "Priyanka Patil",
-            phoneNumber: "+91 9730099881",
-            products: [{ title: "Exquisite White Lilies Bouquet", quantity: 1, price: 1499 }],
-            price: 1698,
-            addons: [],
-            deliveryDate: "2026-06-20", // Tomorrow
-            deliveryTime: "Fixed Time Delivery (+₹199)",
-            address: "Nano Space, Block C, Baner, Pune - 411045",
-            personalMessage: "Happy Birthday Sis! Have an amazing day!",
-            status: "Pending",
-            createdAt: new Date("2026-06-19T06:15:00Z").toISOString()
-          },
-          {
-            id: "PSF-1003",
-            customerName: "Rohit Deshmukh",
-            phoneNumber: "+91 8855221144",
-            products: [{ title: "Elegant Orchid Fantasy", quantity: 1, price: 899 }],
-            price: 899,
-            addons: [],
-            deliveryDate: "2026-06-18", // Yesterday
-            deliveryTime: "Standard Delivery (Free)",
-            address: "Siddharth Towers, Kothrud, Pune - 411038",
-            personalMessage: "Congratulations on the new home! Best wishes.",
-            status: "Delivered",
-            createdAt: new Date("2026-06-18T10:00:00Z").toISOString()
-          },
-          {
-            id: "PSF-1004",
-            customerName: "Shrikant Kulkarni",
-            phoneNumber: "+91 9011223344",
-            products: [
-              { title: "Sweet Harmony Carnations Bouquet", quantity: 1, price: 549 },
-              { title: "Gourmet Fresh Chocolate Cake (Half Kg)", quantity: 1, price: 699 }
-            ],
-            price: 1248,
-            addons: [],
-            deliveryDate: "2026-06-19", // Today
-            deliveryTime: "Standard Delivery (Free)",
-            address: "Magarpatta City, Iris Society, Apt 902, Hadapsar, Pune - 411028",
-            personalMessage: "Wishing you a speedy recovery! Get well soon.",
-            status: "Pending",
-            createdAt: new Date("2026-06-19T04:20:00Z").toISOString()
-          }
-        ];
-        localStorage.setItem("sajawat_orders", JSON.stringify(existingOrders));
       }
     } catch (e) {
-      console.warn("Could not read/write orders localStorage:", e);
+      console.warn("Could not read orders localStorage:", e);
     }
 
     // 2. Generate next Order ID
@@ -232,7 +314,7 @@ export default function CartDrawer({
       price: finalTotal,
       addons: orderAddonsStr,
       deliveryDate: deliveryDate,
-      deliveryTime: getDeliveryLabel(),
+      deliveryTime: `${getDeliveryLabel()} (${deliveryTimeSlot})`,
       address: `${address.trim()}, ${deliveryArea}, Pune - ${pincode}`,
       personalMessage: customMessage.trim(),
       status: "Pending" as const,
@@ -246,6 +328,64 @@ export default function CartDrawer({
     } catch (e) {
       console.error(e);
     }
+
+    // Generate WhatsApp text and open WhatsApp
+    const floristWhatsApp = "918484905722";
+    
+    let msg = `🌸 *Pune Sajawat Florist Order*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    msg += `👤 *Customer Details*\n`;
+    msg += `* Recipient Name: ${recipientName.trim()}\n`;
+    msg += `* Phone Number: ${recipientPhone.trim()}\n\n`;
+
+    msg += `📦 *Delivery Details*\n`;
+    msg += `* Delivery Date: ${deliveryDate}\n`;
+    msg += `* Delivery Type: ${getDeliveryLabel()}\n`;
+    msg += `* Requested Delivery Time: ${deliveryTimeSlot}\n`;
+    msg += `* Delivery Area: ${deliveryArea}\n`;
+    msg += `* Pincode: ${pincode}\n`;
+    msg += `* Complete Address: ${address.trim()}\n\n`;
+
+    msg += `🛒 *Products Ordered*\n`;
+    cart.forEach(item => {
+      msg += `* ${item.product.title} × ${item.quantity}\n`;
+      msg += `  Price: ₹${item.product.price * item.quantity}\n`;
+    });
+    msg += `\n`;
+
+    const activeAddons = Object.entries(selectedAddons).filter(([, qty]) => qty > 0);
+    if (activeAddons.length > 0) {
+      msg += `🍫 *Selected Add-ons*\n`;
+      activeAddons.forEach(([addonId, qty]) => {
+        const ad = ADDONS.find(a => a.id === addonId);
+        if (ad) {
+          msg += `* ${ad.name} × ${qty}\n`;
+          msg += `  Price: ₹${ad.price * qty}\n`;
+        }
+      });
+      msg += `\n`;
+    }
+
+    if (customMessage.trim()) {
+      msg += `💌 *Greeting Card Message*\n`;
+      msg += `"${customMessage.trim()}"\n\n`;
+    }
+
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    msg += `🧾 *Order Summary*\n`;
+    msg += `* Products Total: ₹${itemsSubtotal}\n`;
+    if (addonsSubtotal > 0) {
+      msg += `* Add-ons Total: ₹${addonsSubtotal}\n`;
+    }
+    msg += `* Delivery Charge: ${deliveryCost > 0 ? `₹${deliveryCost}` : "Free"}\n`;
+    msg += `* Grand Total: ₹${finalTotal}*\n\n`;
+
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🙏 Thank you!\nPlease confirm this order.`;
+
+    const encodedText = encodeURIComponent(msg);
+    window.open(`https://api.whatsapp.com/send?phone=${floristWhatsApp}&text=${encodedText}`, "_blank");
 
     // SetPlacedOrderId to trigger Success Modal State
     setPlacedOrderId(orderId);
@@ -354,6 +494,7 @@ export default function CartDrawer({
                       msg += `📦 *Delivery Details*\n`;
                       msg += `Delivery Date: ${deliveryDate}\n`;
                       msg += `Delivery Type: ${getDeliveryLabel()}\n`;
+                      if (deliveryTimeSlot) msg += `Time Slot: ${deliveryTimeSlot}\n`;
                       msg += `Area: ${deliveryArea}\n`;
                       msg += `Pincode: ${pincode}\n`;
                       msg += `Complete Address: ${address.trim()}\n`;
@@ -589,127 +730,382 @@ export default function CartDrawer({
                     </div>
 
                     {/* 2-Column fields layout for Address & Delivery details */}
-                    <div className="p-3.5 rounded-lg border border-stone-200/60 bg-white space-y-3 font-sans" id="delivery-config-block">
+                    <div className="p-3.5 rounded-lg border border-stone-200/60 bg-white space-y-4 font-sans" id="delivery-config-block">
                       <div className="flex items-center gap-1.5 text-stone-800 font-bold text-xs uppercase tracking-wider pb-1.5 border-b border-stone-100">
                         <Gift className="w-3.5 h-3.5 text-[#82862F]" />
                         <span>Delivery Details</span>
                       </div>
 
-                      {/* Recipient Name | Phone Number (2 columns) */}
-                      <div className="grid grid-cols-2 gap-3" id="recipient-details-row">
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Recipient Name</label>
-                          <input
-                            type="text"
-                            placeholder="Recipient's Name"
-                            value={recipientName}
-                            onChange={(e) => setRecipientName(e.target.value)}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Phone Number</label>
-                          <input
-                            type="tel"
-                            placeholder="Recipient's Phone"
-                            value={recipientPhone}
-                            onChange={(e) => setRecipientPhone(e.target.value)}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Delivery Date | Delivery Type (2 columns) */}
-                      <div className="grid grid-cols-2 gap-3" id="delivery-logistics-row">
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Delivery Date</label>
-                          <input
-                            type="date"
-                            value={deliveryDate}
-                            onChange={(e) => setDeliveryDate(e.target.value)}
-                            min={new Date().toISOString().split("T")[0]}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Delivery Type</label>
-                          <select
-                            value={deliveryType}
-                            onChange={(e) => setDeliveryType(e.target.value as any)}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
-                          >
-                            <option value="standard">Standard (FREE)</option>
-                            {new Date().getHours() < 20 && (
-                              <option value="sameday">Same Day (+₹{settings.types.find(t => t.id === "sameday")?.charge ?? 99})</option>
-                            )}
-                            <option value="fixed">Fixed Time (+₹{settings.types.find(t => t.id === "fixed")?.charge ?? 149})</option>
-                            <option value="night">Night Delivery (+₹{settings.types.find(t => t.id === "night")?.charge ?? 100})</option>
-                            <option value="midnight">Midnight (+₹{settings.types.find(t => t.id === "midnight")?.charge ?? 249})</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* After 11 PM warning notice */}
-                      {new Date().getHours() >= 23 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-800 font-bold flex items-center gap-1.5 font-sans animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                          <span>Next available delivery is tomorrow.</span>
-                        </div>
-                      )}
-
-                      {/* Custom hour, minute, AM/PM selector ONLY for Fixed Time Deliveries */}
-                      {deliveryType === "fixed" && (
-                        <div className="p-2.5 bg-stone-50 border border-stone-200/60 rounded-lg space-y-1.5 font-sans animate-fade-in" id="fixed-delivery-time-picker">
-                          <label className="text-[9.5px] text-[#82862F] uppercase tracking-wider font-extrabold block">Select Specific Delivery Time Slot</label>
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <span className="text-[8.5px] text-stone-400 uppercase tracking-wider block mb-0.5">Hour</span>
-                              <select
-                                value={fixedHour}
-                                onChange={(e) => setFixedHour(e.target.value)}
-                                className="w-full text-xs rounded-md border border-stone-200 bg-white py-1 px-1.5 outline-none text-stone-850 font-bold"
-                              >
-                                {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map((h) => (
-                                  <option key={h} value={h}>{h}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="flex-1">
-                              <span className="text-[8.5px] text-stone-400 uppercase tracking-wider block mb-0.5">Minute</span>
-                              <select
-                                value={fixedMinute}
-                                onChange={(e) => setFixedMinute(e.target.value)}
-                                className="w-full text-xs rounded-md border border-stone-200 bg-white py-1 px-1.5 outline-none text-stone-850 font-bold"
-                              >
-                                {["00", "15", "30", "45"].map((m) => (
-                                  <option key={m} value={m}>{m}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="flex-1">
-                              <span className="text-[8.5px] text-stone-400 uppercase tracking-wider block mb-0.5">AM/PM</span>
-                              <select
-                                value={fixedPeriod}
-                                onChange={(e) => setFixedPeriod(e.target.value)}
-                                className="w-full text-xs rounded-md border border-stone-200 bg-white py-1 px-1.5 outline-none text-[#82862F] font-bold"
-                              >
-                                {["AM", "PM"].map((p) => (
-                                  <option key={p} value={p}>{p}</option>
-                                ))}
-                              </select>
-                            </div>
+                      {/* Validation Warning Banner */}
+                      {submitAttempted && validationErrors.length > 0 && (
+                        <div className="p-3 bg-rose-50 border border-rose-100 rounded-lg text-left flex items-start gap-2 animate-shake" id="validation-error-banner">
+                          <AlertCircle className="w-4 h-4 text-rose-650 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <span className="text-rose-700 font-bold block">
+                              Please complete all required delivery details before placing your order.
+                            </span>
+                            <ul className="text-[10px] text-stone-500 list-disc list-inside mt-1 font-semibold space-y-0.5">
+                              {validationErrors.map((err) => {
+                                switch (err) {
+                                  case "recipientName": return <li key={err}>Recipient Name</li>;
+                                  case "recipientPhone": return <li key={err}>Phone Number</li>;
+                                  case "deliveryDate": return <li key={err}>Delivery Date</li>;
+                                  case "deliveryType": return <li key={err}>Delivery Type</li>;
+                                  case "deliveryTimeSlot": return <li key={err}>Delivery Time</li>;
+                                  case "deliveryArea": return <li key={err}>Local Area</li>;
+                                  case "pincode": return <li key={err}>Pincode</li>;
+                                  case "address": return <li key={err}>Complete Delivery Address</li>;
+                                  default: return null;
+                                }
+                              })}
+                            </ul>
                           </div>
                         </div>
                       )}
 
+                      {/* Recipient Name | Phone Number (2 columns) */}
+                      <div className="grid grid-cols-2 gap-3" id="recipient-details-row">
+                        <div id="field-recipient-name">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Recipient Name <span className="text-rose-500">*</span></label>
+                          <input
+                            type="text"
+                            placeholder="Recipient's Name"
+                            value={recipientName}
+                            onChange={(e) => {
+                              setRecipientName(e.target.value);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`w-full text-xs rounded-md border py-1.5 px-2.5 outline-none text-stone-850 transition-all font-sans ${
+                              submitAttempted && validationErrors.includes("recipientName")
+                                ? "border-rose-455 bg-rose-50/10 focus:border-rose-600"
+                                : "border-stone-200 focus:border-[#82862F]/50"
+                            }`}
+                          />
+                        </div>
+                        <div id="field-recipient-phone">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Phone Number <span className="text-rose-500">*</span></label>
+                          <input
+                            type="tel"
+                            placeholder="Recipient's Phone"
+                            value={recipientPhone}
+                            onChange={(e) => {
+                              setRecipientPhone(e.target.value);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`w-full text-xs rounded-md border py-1.5 px-2.5 outline-none text-stone-850 transition-all font-sans font-mono ${
+                              submitAttempted && validationErrors.includes("recipientPhone")
+                                ? "border-rose-455 bg-rose-50/10 focus:border-rose-600"
+                                : "border-stone-200 focus:border-[#82862F]/50"
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* PREMIUM DELIVERY DATE SELECTION */}
+                      <div className="space-y-2" id="field-delivery-date">
+                        <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">
+                          Select Delivery Date <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Today Button */}
+                          <button
+                            type="button"
+                            disabled={isPastCutoff}
+                            onClick={() => {
+                              setDeliveryDate(todayObj.raw);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`py-2 px-2 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-center items-center font-sans ${
+                              isPastCutoff
+                                ? "border-stone-150 bg-stone-50 text-stone-300 opacity-40 cursor-not-allowed"
+                                : deliveryDate === todayObj.raw
+                                ? "border-[#82862F] bg-[#82862F]/5 ring-1 ring-[#82862F] font-bold text-stone-900"
+                                : "border-stone-200 bg-white hover:border-[#82862F] text-stone-750"
+                            }`}
+                            id="date-btn-today"
+                          >
+                            <span className="text-[9px] uppercase tracking-wider block font-semibold opacity-75">Today</span>
+                            <span className="text-xs font-bold font-mono">{todayObj.display}</span>
+                          </button>
+
+                          {/* Tomorrow Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeliveryDate(tomorrowObj.raw);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`py-2 px-2 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-center items-center font-sans ${
+                              deliveryDate === tomorrowObj.raw
+                                ? "border-[#82862F] bg-[#82862F]/5 ring-1 ring-[#82862F] font-bold text-stone-900"
+                                : "border-stone-200 bg-white hover:border-[#82862F] text-stone-750"
+                            }`}
+                            id="date-btn-tomorrow"
+                          >
+                            <span className="text-[9px] uppercase tracking-wider block font-semibold opacity-75">Tomorrow</span>
+                            <span className="text-xs font-bold font-mono">{tomorrowObj.display}</span>
+                          </button>
+
+                          {/* Choose Date Button */}
+                          <div className="relative">
+                            <input
+                              type="date"
+                              min={isPastCutoff ? tomorrowObj.raw : todayObj.raw}
+                              value={deliveryDate !== todayObj.raw && deliveryDate !== tomorrowObj.raw ? deliveryDate : ""}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setDeliveryDate(e.target.value);
+                                  setSubmitAttempted(false);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10 text-[16px]"
+                            />
+                            <button
+                              type="button"
+                              className={`w-full py-2 px-2 rounded-lg border text-center transition-all flex flex-col justify-center items-center h-full font-sans ${
+                                deliveryDate !== todayObj.raw && deliveryDate !== tomorrowObj.raw && deliveryDate !== ""
+                                  ? "border-[#82862F] bg-[#82862F]/5 ring-1 ring-[#82862F] font-bold text-stone-900"
+                                  : "border-stone-200 bg-white hover:border-[#82862F] text-stone-750"
+                              }`}
+                              id="date-btn-choose"
+                            >
+                              <span className="text-[9px] uppercase tracking-wider block font-semibold opacity-75">Choose Date</span>
+                              <span className="text-xs font-bold font-mono">
+                                {deliveryDate !== todayObj.raw && deliveryDate !== tomorrowObj.raw && deliveryDate !== ""
+                                  ? formatDateDisplay(deliveryDate)
+                                  : "Select 📅"}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* DELIVERY METHODS & TIME SLOTS WIDGET */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        
+                        {/* LEFT COLUMN: Delivery Type Cards */}
+                        <div className="space-y-2" id="field-delivery-type">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">
+                            Delivery Type <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="flex flex-col gap-2">
+                            {[
+                              { id: "standard", name: "Standard Delivery", price: 0, label: "FREE", info: "Flexible delivery slot" },
+                              { id: "morning", name: "Morning Delivery", price: 99, label: "+₹99", info: "For early morning surprise" },
+                              { id: "express", name: "Express Delivery", price: 149, label: "+₹149", info: "Delivery within 60-120 mins" },
+                              { id: "fixed", name: "Fixed Time Delivery", price: 199, label: "+₹199", info: "Choose custom exact time" },
+                              { id: "midnight", name: "Pre-Midnight Delivery", price: 299, label: "+₹299", info: "Deliver between 11 PM - midnight" },
+                            ].map((opt) => {
+                              const isSelected = deliveryType === opt.id;
+                              const hasError = submitAttempted && validationErrors.includes("deliveryType");
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setDeliveryType(opt.id as any);
+                                    setSubmitAttempted(false);
+                                  }}
+                                  className={`text-left p-2.5 rounded-xl border-2 transition-all flex justify-between items-center cursor-pointer ${
+                                    isSelected
+                                      ? "border-[#82862F] bg-[#82862F]/5 shadow-xs"
+                                      : hasError
+                                      ? "border-rose-300 bg-rose-50/10 hover:border-rose-400"
+                                      : "border-stone-200 bg-white hover:border-[#82862F]"
+                                  }`}
+                                  id={`delivery-type-${opt.id}`}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className={`text-[11px] font-bold ${isSelected ? "text-stone-900" : "text-stone-700"}`}>
+                                      {opt.name}
+                                    </span>
+                                    <span className="text-[9px] text-stone-400 font-medium">
+                                      {opt.info}
+                                    </span>
+                                  </div>
+                                  <span className={`text-xs font-mono font-black ${isSelected ? "text-[#82862F]" : "text-stone-600"}`}>
+                                    {opt.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: Time Slots Picker */}
+                        <div className="space-y-2" id="field-delivery-time-slot">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">
+                            Select Delivery Time <span className="text-rose-500">*</span>
+                          </label>
+                          <div className={`p-1 rounded-xl transition-all ${
+                            submitAttempted && validationErrors.includes("deliveryTimeSlot")
+                              ? "border border-dashed border-rose-350 bg-rose-50/5"
+                              : ""
+                          }`}>
+                            {(() => {
+                              const isToday = deliveryDate === todayObj.raw;
+                              
+                              if (deliveryType === "express") {
+                                if (!isToday) {
+                                  return (
+                                    <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-xl text-center text-xs text-amber-805 font-bold flex items-center justify-center gap-1.5 animate-fade-in">
+                                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                      <span>Express Delivery is only available for same-day orders.</span>
+                                    </div>
+                                  );
+                                }
+                                
+                                const slots = TIME_SLOTS.express;
+                                const hasError = submitAttempted && validationErrors.includes("deliveryTimeSlot");
+                                return (
+                                  <div className="grid grid-cols-1 gap-2">
+                                    {slots.map((slot) => {
+                                      const isSelected = deliveryTimeSlot === slot;
+                                      return (
+                                        <button
+                                          key={slot}
+                                          type="button"
+                                          onClick={() => {
+                                            setDeliveryTimeSlot(slot);
+                                            setSubmitAttempted(false);
+                                          }}
+                                          className={`py-2 px-3 rounded-xl border text-center transition-all cursor-pointer font-bold text-xs flex flex-col justify-center items-center min-h-[44px] ${
+                                            isSelected
+                                              ? "border-[#82862F] bg-[#82862F]/5 ring-1 ring-[#82862F] text-stone-900"
+                                              : hasError
+                                              ? "border-rose-300 bg-rose-50/10 hover:border-rose-400 text-stone-500"
+                                              : "border-stone-200 bg-white hover:border-[#82862F] text-stone-600"
+                                          }`}
+                                          id={`time-slot-${slot.replace(/\s+/g, '-').toLowerCase()}`}
+                                        >
+                                          <span>{slot}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              }
+                              
+                              if (deliveryType === "midnight") {
+                                if (!isToday) {
+                                  return (
+                                    <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-xl text-center text-xs text-amber-805 font-bold flex items-center justify-center gap-1.5 animate-fade-in">
+                                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                      <span>Pre-Midnight Delivery is only available for same-day orders.</span>
+                                    </div>
+                                  );
+                                }
+                                
+                                return (
+                                  <div className="space-y-2">
+                                    <select
+                                      value={deliveryTimeSlot}
+                                      onChange={(e) => {
+                                        setDeliveryTimeSlot(e.target.value);
+                                        setSubmitAttempted(false);
+                                      }}
+                                      className={`w-full p-2.5 rounded-xl border bg-white text-xs font-bold text-stone-800 outline-none transition-all cursor-pointer ${
+                                        submitAttempted && validationErrors.includes("deliveryTimeSlot")
+                                          ? "border-rose-400 bg-rose-50/10 focus:border-rose-600"
+                                          : "border-stone-200 focus:border-[#82862F]"
+                                      }`}
+                                      id="midnight-time-select"
+                                    >
+                                      <option value="">-- Choose Exact Time --</option>
+                                      {PRE_MIDNIGHT_SLOTS.map((t) => (
+                                        <option key={t} value={t}>
+                                          {t}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <span className="text-[9px] text-stone-400 font-semibold block text-center">
+                                      🕒 Delivered between 11:00 PM and 11:59 PM
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              
+                              if (deliveryType === "fixed") {
+                                return (
+                                  <div className="space-y-2">
+                                    <select
+                                      value={deliveryTimeSlot}
+                                      onChange={(e) => {
+                                        setDeliveryTimeSlot(e.target.value);
+                                        setSubmitAttempted(false);
+                                      }}
+                                      className={`w-full p-2.5 rounded-xl border bg-white text-xs font-bold text-stone-850 outline-none transition-all cursor-pointer ${
+                                        submitAttempted && validationErrors.includes("deliveryTimeSlot")
+                                          ? "border-rose-400 bg-rose-50/10 focus:border-rose-600"
+                                          : "border-stone-200 focus:border-[#82862F]"
+                                      }`}
+                                      id="fixed-time-select"
+                                    >
+                                      <option value="">-- Choose Exact Time --</option>
+                                      {FIXED_TIME_SLOTS.map((t) => (
+                                        <option key={t} value={t}>
+                                          {t}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <span className="text-[9px] text-stone-400 font-semibold block text-center">
+                                      🕒 Delivery scheduled at your exact time choice (+/- 15 mins)
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Standard or Morning
+                              const slots = TIME_SLOTS[deliveryType] || [];
+                              const hasError = submitAttempted && validationErrors.includes("deliveryTimeSlot");
+                              return (
+                                <div className="grid grid-cols-1 gap-2">
+                                  {slots.map((slot) => {
+                                    const isSelected = deliveryTimeSlot === slot;
+                                    return (
+                                      <button
+                                        key={slot}
+                                        type="button"
+                                        onClick={() => {
+                                          setDeliveryTimeSlot(slot);
+                                          setSubmitAttempted(false);
+                                        }}
+                                        className={`py-2 px-3 rounded-xl border text-center transition-all cursor-pointer font-bold text-xs flex flex-col justify-center items-center min-h-[44px] ${
+                                          isSelected
+                                            ? "border-[#82862F] bg-[#82862F]/5 ring-1 ring-[#82862F] text-stone-900"
+                                            : hasError
+                                            ? "border-rose-300 bg-rose-50/10 hover:border-rose-400 text-stone-500"
+                                            : "border-stone-200 bg-white hover:border-[#82862F] text-stone-600"
+                                        }`}
+                                        id={`time-slot-${slot.replace(/\s+/g, '-').replace(/–/g, '-').toLowerCase()}`}
+                                      >
+                                        <span>{slot}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                      </div>
+
                       {/* Area | Pincode (2 columns) */}
                       <div className="grid grid-cols-2 gap-3" id="location-details-row">
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Local Area</label>
+                        <div id="field-delivery-area">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Local Area <span className="text-rose-500">*</span></label>
                           <select
                             value={deliveryArea}
-                            onChange={(e) => handleAreaChange(e.target.value)}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
+                            onChange={(e) => {
+                              handleAreaChange(e.target.value);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`w-full text-xs rounded-md border bg-white py-1.5 px-2.5 outline-none text-stone-855 transition-all font-sans ${
+                              submitAttempted && validationErrors.includes("deliveryArea")
+                                ? "border-rose-400 bg-rose-50/10 focus:border-rose-600"
+                                : "border-stone-200 focus:border-[#82862F]/50"
+                            }`}
                           >
                             {settings.areas.map((area) => (
                               <option key={area.name + "_" + area.postcode} value={area.name}>
@@ -718,28 +1114,42 @@ export default function CartDrawer({
                             ))}
                           </select>
                         </div>
-                        <div>
-                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Pincode</label>
+                        <div id="field-pincode">
+                          <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Pincode <span className="text-rose-500">*</span></label>
                           <input
                             type="text"
                             placeholder="Pincode"
                             maxLength={6}
                             value={pincode}
-                            onChange={(e) => setPincode(e.target.value)}
-                            className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans font-mono"
+                            onChange={(e) => {
+                              setPincode(e.target.value);
+                              setSubmitAttempted(false);
+                            }}
+                            className={`w-full text-xs rounded-md border py-1.5 px-2.5 outline-none text-stone-850 transition-all font-sans font-mono ${
+                              submitAttempted && validationErrors.includes("pincode")
+                                ? "border-rose-400 bg-rose-50/10 focus:border-rose-600"
+                                : "border-stone-200 focus:border-[#82862F]/50"
+                            }`}
                           />
                         </div>
                       </div>
 
                       {/* Detailed Address (full width) */}
-                      <div>
-                        <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Detailed Address (Pune)</label>
+                      <div id="field-address">
+                        <label className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold mb-0.5 block">Detailed Address (Pune) <span className="text-rose-500">*</span></label>
                         <input
                           type="text"
                           placeholder="Apartment name, Apartment Number, Local Landmark..."
                           value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          className="w-full text-xs rounded-md border border-stone-200 bg-white py-1.5 px-2.5 outline-none text-stone-800 focus:border-[#82862F]/50 transition-all font-sans"
+                          onChange={(e) => {
+                            setAddress(e.target.value);
+                            setSubmitAttempted(false);
+                          }}
+                          className={`w-full text-xs rounded-md border py-1.5 px-2.5 outline-none text-stone-850 transition-all font-sans ${
+                            submitAttempted && validationErrors.includes("address")
+                              ? "border-rose-400 bg-rose-50/10 focus:border-rose-600"
+                              : "border-stone-200 focus:border-[#82862F]/50"
+                          }`}
                         />
                       </div>
                     </div>
@@ -818,37 +1228,21 @@ export default function CartDrawer({
                       {/* Improved Premium WhatsApp checkout button */}
                       <button
                         onClick={triggerWhatsApp}
-                        disabled={!isFormValid}
-                        className={`w-full py-2.5 rounded-lg transition-all font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs ${
-                          isFormValid
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-[0.99]"
-                            : "bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200"
-                        }`}
+                        className="w-full py-2.5 rounded-lg transition-all font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-[0.99]"
                         id="desktop-checkout-whatsapp-btn"
                       >
-                        <MessageCircle className={`w-4 h-4 shrink-0 ${isFormValid ? "fill-white stroke-none" : "stroke-stone-400 fill-none"}`} />
+                        <MessageCircle className="w-4 h-4 shrink-0 fill-white stroke-none" />
                         <span>Order on WhatsApp • ₹{finalTotal}</span>
                       </button>
 
                       <div className="text-center">
-                        {!isFormValid ? (
-                          <div className="p-2 bg-rose-50 border border-rose-100 rounded text-left">
-                            <span className="text-[10px] text-rose-600 font-bold block font-sans uppercase tracking-wider mb-1">
-                              ⚠️ Check required details:
-                            </span>
-                            <ul className="text-[9px] text-stone-500 list-disc list-inside space-y-0.5 font-medium leading-normal">
-                              {recipientName.trim() === "" && <li>Recipient Name</li>}
-                              {recipientPhone.trim() === "" && <li>Phone Number</li>}
-                              {address.trim() === "" && <li>Detailed Address</li>}
-                              {deliveryDate.trim() === "" && <li>Delivery Date</li>}
-                              {pincode.trim() === "" && <li>Pincode</li>}
-                            </ul>
+                        <div className="p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-left flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="text-[10px] text-stone-600 font-medium leading-relaxed">
+                            <strong className="text-emerald-700 font-bold block mb-0.5">Instant order processing</strong>
+                            Your order is routed directly to WhatsApp for confirmation & dispatch coordination.
                           </div>
-                        ) : (
-                          <span className="text-[8.5px] text-stone-400 block font-sans">
-                            ✨ Instant order status and photo proof shared!
-                          </span>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -897,27 +1291,23 @@ export default function CartDrawer({
                 )}
 
                 {/* Sticky WhatsApp trigger */}
-                <div className="p-3 bg-white">
-                  <button
-                    onClick={triggerWhatsApp}
-                    disabled={!isFormValid}
-                    className={`w-full py-3 rounded-lg transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xs ${
-                      isFormValid
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-[0.99]"
-                        : "bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200"
-                    }`}
-                    id="mobile-checkout-whatsapp-btn"
-                  >
-                    <MessageCircle className={`w-5 h-5 ${isFormValid ? "fill-white stroke-none" : "stroke-stone-400 fill-none"}`} />
-                    <span>Order on WhatsApp • ₹{finalTotal}</span>
-                  </button>
-                  {!isFormValid && (
-                    <div className="text-center mt-2 animate-pulse bg-rose-50/50 py-1 px-2 border border-rose-100/50 rounded">
-                      <span className="text-[10px] text-rose-600 font-bold font-sans">
-                        ⚠️ Please fill in all delivery details above!
+                <div className="p-3 bg-white relative">
+                  {submitAttempted && validationErrors.length > 0 && (
+                    <div className="absolute bottom-[72px] left-4 right-4 p-2 bg-rose-50 border border-rose-150 rounded-lg text-left flex items-start gap-1.5 font-sans shadow-lg z-30 animate-shake">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                      <span className="text-[9.5px] font-bold text-rose-600 leading-snug">
+                        Please complete all required delivery details before placing your order.
                       </span>
                     </div>
                   )}
+                  <button
+                    onClick={triggerWhatsApp}
+                    className="w-full py-3 rounded-lg transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-[0.99]"
+                    id="mobile-checkout-whatsapp-btn"
+                  >
+                    <MessageCircle className="w-5 h-5 fill-white stroke-none" />
+                    <span>Order on WhatsApp • ₹{finalTotal}</span>
+                  </button>
                 </div>
               </div>
             )}
