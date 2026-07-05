@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { MessageCircle, ShoppingBag, Eye, Store, Sparkles, Phone, ArrowUpRight, Flower, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageCircle, ShoppingBag, Eye, Store, Sparkles, Phone, ArrowUpRight, Flower, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -992,34 +992,76 @@ export default function App() {
         onRemoveAddon={handleRemoveAddon}
       />
 
-      {/* Toast Notification */}
+      {/* Toast Notification — mobile: compact card bottom-right above floating buttons; desktop: centred pill */}
       <AnimatePresence>
         {showToast && lastAddedProduct && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.85, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
-            exit={{ opacity: 0, y: 20, scale: 0.85, x: "-50%" }}
-            transition={{ type: "spring", damping: 15, stiffness: 220 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-stone-900/98 backdrop-blur-md border border-stone-800 text-white px-5 py-3 rounded-full flex items-center gap-4 shadow-2xl z-55 max-w-[92vw] w-max font-sans whitespace-nowrap"
-            id="cart-added-toast"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="text-xs font-semibold tracking-tight text-stone-100">
-                ✓ Added to cart
-              </span>
-            </div>
-            <button
-              onClick={() => {
-                setIsCartOpen(true);
-                setShowToast(false);
+          <>
+            {/* ── MOBILE CARD (< md) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.92 }}
+              transition={{ duration: 0.27, ease: [0.34, 1.2, 0.64, 1] }}
+              className="md:hidden fixed right-4 z-[55] w-auto max-w-[280px] bg-stone-900/98 backdrop-blur-md border border-stone-800 text-white rounded-[18px] shadow-2xl shadow-black/30 font-sans"
+              style={{
+                bottom: "calc(160px + env(safe-area-inset-bottom, 0px))"
               }}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] uppercase tracking-widest px-3.5 py-1.5 rounded-full transition-colors font-sans cursor-pointer active:scale-95 shrink-0"
-              id="toast-view-cart-btn"
+              id="cart-added-toast"
             >
-              Checkout 🌸
-            </button>
-          </motion.div>
+              <div className="px-4 pt-3.5 pb-3 flex flex-col gap-2">
+                {/* Header row */}
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <Check className="w-3 h-3 text-white stroke-[3]" />
+                  </span>
+                  <span className="text-[12px] font-black tracking-tight text-white leading-none">
+                    Added to Cart
+                  </span>
+                </div>
+                {/* Sub-text */}
+                <p className="text-[10.5px] text-stone-400 font-medium leading-snug pl-7">
+                  Product added successfully.
+                </p>
+                {/* CTA */}
+                <button
+                  onClick={() => {
+                    setIsCartOpen(true);
+                    setShowToast(false);
+                  }}
+                  className="mt-1 w-full py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-colors cursor-pointer active:scale-95"
+                  id="toast-view-cart-btn"
+                >
+                  CHECKOUT 🌸
+                </button>
+              </div>
+            </motion.div>
+
+            {/* ── DESKTOP PILL (≥ md) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.88 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.88 }}
+              transition={{ type: "spring", damping: 16, stiffness: 230 }}
+              className="hidden md:flex fixed bottom-24 left-1/2 -translate-x-1/2 bg-stone-900/98 backdrop-blur-md border border-stone-800 text-white px-5 py-3 rounded-full items-center gap-4 shadow-2xl z-[55] w-max font-sans whitespace-nowrap"
+              id="cart-added-toast-desktop"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-xs font-semibold tracking-tight text-stone-100">
+                  ✓ Added to cart
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setIsCartOpen(true);
+                  setShowToast(false);
+                }}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] uppercase tracking-widest px-3.5 py-1.5 rounded-full transition-colors font-sans cursor-pointer active:scale-95 shrink-0"
+              >
+                Checkout 🌸
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
