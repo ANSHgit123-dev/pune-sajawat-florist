@@ -42,48 +42,6 @@
     "addons": []
   },
   {
-    "id": "prod_baby_girl_balloon_basket",
-    "name": "Welcome Baby Girl Celebration Hamper",
-    "title": "Welcome Baby Girl Celebration Hamper",
-    "category": "Gift Hampers",
-    "price": 7000,
-    "originalPrice": 9999,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg"
-    ],
-    "description": "Newborn celebratory balloon floral hamper in a wooden box.",
-    "shortDescription": "Newborn celebratory balloon floral hamper in a wooden box.",
-    "longDescription": "The ultimate surprise to welcome a new bundle of joy. This custom arrangement features a rustic wooden crate filled with fresh pastel yellow and peach roses, mixed with colorful baby's breath. It stands below a floating transparent balloon styled as a hot air balloon saying 'It's A Baby Girl', and features an adorable unicorn rainbow balloon on the side.",
-    "rating": 5,
-    "reviewsCount": 11,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": true,
-    "isFeatured": true,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-22T16:11:12+00:00",
-    "sku": "SKU-BABY-GIRL",
-    "quantity": 12,
-    "lowStockAlert": 2,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 50,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
     "id": "prod_anthurium_blue_chrysanthemum",
     "name": "Iridescent Anthurium & Sky Blue Blossom Bouquet",
     "title": "Iridescent Anthurium & Sky Blue Blossom Bouquet",
@@ -210,39 +168,42 @@
     "addons": []
   },
   {
-    "id": "prod_1782154509589_507_rustic_meadow_serenade_bouquet",
-    "name": "Rustic Meadow Serenade Bouquet",
-    "title": "Rustic Meadow Serenade Bouquet",
-    "category": "Bouquets",
-    "price": 2200,
-    "originalPrice": 2499,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
+    "id": "prod_baby_girl_balloon_basket",
+    "name": "Welcome Baby Girl Celebration Hamper",
+    "title": "Welcome Baby Girl Celebration Hamper",
+    "category": "Gift Hampers",
+    "price": 7000,
+    "originalPrice": 9999,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089816-1782154492028.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089816-1782154492028.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782144641863.jpg"
     ],
-    "description": "A charming mix of seasonal blooms wrapped in rustic elegance, perfect for adding a touch of nature's beauty to any moment.",
-    "shortDescription": "A charming mix of seasonal blooms wrapped in rustic elegance, perfect for adding a touch of nature's beauty to any moment.",
-    "longDescription": "Experience the serene beauty of the Rustic Meadow Serenade Bouquet. This exquisite arrangement features a delightful blend of vibrant purples, soft pinks, and pristine white flowers, accented with unique feathery greens. Expertly hand-tied and enveloped in a crinkled brown rustic paper with a delicate white ribbon, it's an ideal choice for conveying warmth and natural charm on any special occasion.",
+    "description": "Newborn celebratory balloon floral hamper in a wooden box.",
+    "shortDescription": "Newborn celebratory balloon floral hamper in a wooden box.",
+    "longDescription": "The ultimate surprise to welcome a new bundle of joy. This custom arrangement features a rustic wooden crate filled with fresh pastel yellow and peach roses, mixed with colorful baby's breath. It stands below a floating transparent balloon styled as a hot air balloon saying 'It's A Baby Girl', and features an adorable unicorn rainbow balloon on the side.",
     "rating": 5,
-    "reviewsCount": 1,
+    "reviewsCount": 11,
     "isBestSeller": true,
     "isNew": true,
     "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
+    "isRecommended": true,
+    "isFeatured": true,
     "isEnabled": true,
     "isHidden": false,
-    "createdAt": "2026-06-22T18:55:09.621+00:00",
-    "sku": "SKU-9088",
-    "quantity": 1,
-    "lowStockAlert": 0,
+    "createdAt": "2026-06-22T16:11:12+00:00",
+    "sku": "SKU-BABY-GIRL",
+    "quantity": 12,
+    "lowStockAlert": 2,
     "deliverySettings": {
-      "charge": null,
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
       "customCharge": 50,
       "customChargeEnabled": false
     },
@@ -319,6 +280,45 @@
     "addons": []
   },
   {
+    "id": "prod_1782154509589_507_rustic_meadow_serenade_bouquet",
+    "name": "Rustic Meadow Serenade Bouquet",
+    "title": "Rustic Meadow Serenade Bouquet",
+    "category": "Bouquets",
+    "price": 2200,
+    "originalPrice": 2499,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089816-1782154492028.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089584-1782154491893.jpg",
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782154089816-1782154492028.jpg"
+    ],
+    "description": "A charming mix of seasonal blooms wrapped in rustic elegance, perfect for adding a touch of nature's beauty to any moment.",
+    "shortDescription": "A charming mix of seasonal blooms wrapped in rustic elegance, perfect for adding a touch of nature's beauty to any moment.",
+    "longDescription": "Experience the serene beauty of the Rustic Meadow Serenade Bouquet. This exquisite arrangement features a delightful blend of vibrant purples, soft pinks, and pristine white flowers, accented with unique feathery greens. Expertly hand-tied and enveloped in a crinkled brown rustic paper with a delicate white ribbon, it's an ideal choice for conveying warmth and natural charm on any special occasion.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-22T18:55:09.621+00:00",
+    "sku": "SKU-9088",
+    "quantity": 1,
+    "lowStockAlert": 0,
+    "deliverySettings": {
+      "charge": null,
+      "customCharge": 50,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
     "id": "prod_1782155283805_563_golden_radiance_sunflower___rose_embrace",
     "name": "Golden Radiance Sunflower & Rose Embrace",
     "title": "Golden Radiance Sunflower & Rose Embrace",
@@ -346,6 +346,80 @@
     "isHidden": false,
     "createdAt": "2026-06-22T19:08:03.83+00:00",
     "sku": "SKU-2659",
+    "quantity": 1,
+    "lowStockAlert": 0,
+    "deliverySettings": {
+      "charge": null,
+      "customCharge": 50,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1782155283810_859_serene_bloom_harmony_bouquet",
+    "name": "Serene Bloom Harmony Bouquet",
+    "title": "Serene Bloom Harmony Bouquet",
+    "category": "Bouquets",
+    "price": 2700,
+    "originalPrice": 3000,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg"
+    ],
+    "description": "A delicate mix of enchanting blooms and elegant lilies, artfully wrapped in pastel hues, perfect for gentle gestures.",
+    "shortDescription": "A delicate mix of enchanting blooms and elegant lilies, artfully wrapped in pastel hues, perfect for gentle gestures.",
+    "longDescription": "Discover the delicate charm of the Serene Bloom Harmony Bouquet, a delightful arrangement featuring budding lilies and a gentle mix of colourful blossoms. Wrapped in serene blue and soft gold paper with a vibrant green bow, this charming bouquet exudes understated elegance. It's an ideal choice for expressing sympathy, gratitude, or simply brightening someone's day with its peaceful beauty.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-22T19:08:03.83+00:00",
+    "sku": "SKU-4940",
+    "quantity": 1,
+    "lowStockAlert": 0,
+    "deliverySettings": {
+      "charge": null,
+      "customCharge": 50,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1782155283811_567_radiant_duo_rose___lily_symphony",
+    "name": "Radiant Duo Rose & Lily Symphony",
+    "title": "Radiant Duo Rose & Lily Symphony",
+    "category": "Bouquets",
+    "price": 2300,
+    "originalPrice": 3000,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg"
+    ],
+    "description": "A captivating blend of fiery red and cheerful yellow roses, accented with lilies, creating a truly majestic floral statement.",
+    "shortDescription": "A captivating blend of fiery red and cheerful yellow roses, accented with lilies, creating a truly majestic floral statement.",
+    "longDescription": "Ignite joy with the Radiant Duo Rose & Lily Symphony, an exquisite bouquet showcasing the perfect harmony of passionate red and sunny yellow roses. Complemented by elegant lily buds and delicate baby's breath, this arrangement is beautifully presented in striking black and white paper with a luxurious ribbon. It’s an unforgettable gift for anniversaries, birthdays, or any moment deserving of grand celebration.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-22T19:08:03.83+00:00",
+    "sku": "SKU-8579",
     "quantity": 1,
     "lowStockAlert": 0,
     "deliverySettings": {
@@ -401,43 +475,6 @@
     "addons": []
   },
   {
-    "id": "prod_1782155283810_859_serene_bloom_harmony_bouquet",
-    "name": "Serene Bloom Harmony Bouquet",
-    "title": "Serene Bloom Harmony Bouquet",
-    "category": "Bouquets",
-    "price": 2700,
-    "originalPrice": 3000,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137135-1782155262570.jpg"
-    ],
-    "description": "A delicate mix of enchanting blooms and elegant lilies, artfully wrapped in pastel hues, perfect for gentle gestures.",
-    "shortDescription": "A delicate mix of enchanting blooms and elegant lilies, artfully wrapped in pastel hues, perfect for gentle gestures.",
-    "longDescription": "Discover the delicate charm of the Serene Bloom Harmony Bouquet, a delightful arrangement featuring budding lilies and a gentle mix of colourful blossoms. Wrapped in serene blue and soft gold paper with a vibrant green bow, this charming bouquet exudes understated elegance. It's an ideal choice for expressing sympathy, gratitude, or simply brightening someone's day with its peaceful beauty.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-22T19:08:03.83+00:00",
-    "sku": "SKU-4940",
-    "quantity": 1,
-    "lowStockAlert": 0,
-    "deliverySettings": {
-      "charge": null,
-      "customCharge": 50,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
     "id": "prod_1782155283811_209_enchanted_garden_love_hamper",
     "name": "Enchanted Garden Love Hamper",
     "title": "Enchanted Garden Love Hamper",
@@ -465,43 +502,6 @@
     "isHidden": false,
     "createdAt": "2026-06-22T19:08:03.83+00:00",
     "sku": "SKU-6282",
-    "quantity": 1,
-    "lowStockAlert": 0,
-    "deliverySettings": {
-      "charge": null,
-      "customCharge": 50,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
-    "id": "prod_1782155283811_567_radiant_duo_rose___lily_symphony",
-    "name": "Radiant Duo Rose & Lily Symphony",
-    "title": "Radiant Duo Rose & Lily Symphony",
-    "category": "Bouquets",
-    "price": 2300,
-    "originalPrice": 3000,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782155137232-1782155262593.jpg"
-    ],
-    "description": "A captivating blend of fiery red and cheerful yellow roses, accented with lilies, creating a truly majestic floral statement.",
-    "shortDescription": "A captivating blend of fiery red and cheerful yellow roses, accented with lilies, creating a truly majestic floral statement.",
-    "longDescription": "Ignite joy with the Radiant Duo Rose & Lily Symphony, an exquisite bouquet showcasing the perfect harmony of passionate red and sunny yellow roses. Complemented by elegant lily buds and delicate baby's breath, this arrangement is beautifully presented in striking black and white paper with a luxurious ribbon. It’s an unforgettable gift for anniversaries, birthdays, or any moment deserving of grand celebration.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-22T19:08:03.83+00:00",
-    "sku": "SKU-8579",
     "quantity": 1,
     "lowStockAlert": 0,
     "deliverySettings": {
@@ -695,22 +695,22 @@
     "addons": []
   },
   {
-    "id": "prod_1782156502875_859_enchanting_pink_lily___rose_serenity_bouquet",
-    "name": "Enchanting Pink Lily & Rose Serenity Bouquet",
-    "title": "Enchanting Pink Lily & Rose Serenity Bouquet",
-    "category": "Bouquets",
-    "price": 1699,
-    "originalPrice": 2299,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg",
+    "id": "prod_1782156502885_909_romantic_ruby_red_anniversary_rose_delight",
+    "name": "Romantic Ruby Red Anniversary Rose Delight",
+    "title": "Romantic Ruby Red Anniversary Rose Delight",
+    "category": "Anniversary Bouquets",
+    "price": 3499,
+    "originalPrice": 4729,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg"
     ],
-    "description": "Discover profound elegance with this enchanting bouquet, featuring vibrant pink lilies, pristine white and yellow roses, and cheerful white chrysanthemums. Adorned with delicate baby's breath and lush greens, it’s artfully wrapped in rich brown and floral paper. Perfect for expressing heartfelt emotions on any special occasion.",
-    "shortDescription": "A captivating blend of pink lilies, delicate roses, and chrysanthemums, wrapped in elegant floral paper, conveying pure serenity.",
-    "longDescription": "Discover profound elegance with this enchanting bouquet, featuring vibrant pink lilies, pristine white and yellow roses, and cheerful white chrysanthemums. Adorned with delicate baby's breath and lush greens, it’s artfully wrapped in rich brown and floral paper. Perfect for expressing heartfelt emotions on any special occasion.",
+    "description": "Celebrate your timeless love with this breathtaking anniversary bouquet. Fifty opulent ruby red roses are expertly arranged and adorned with delicate baby's breath, all elegantly wrapped in black and gold. The stunning 'Happy Anniversary' bubble balloon adds a unique, festive touch, making it a perfect symbol of enduring affection.",
+    "shortDescription": "A grand bouquet of fifty ruby red roses, exquisitely wrapped, crowned with a 'Happy Anniversary' bubble balloon for your beloved.",
+    "longDescription": "Celebrate your timeless love with this breathtaking anniversary bouquet. Fifty opulent ruby red roses are expertly arranged and adorned with delicate baby's breath, all elegantly wrapped in black and gold. The stunning 'Happy Anniversary' bubble balloon adds a unique, festive touch, making it a perfect symbol of enduring affection.",
     "rating": 5,
     "reviewsCount": 1,
     "isBestSeller": true,
@@ -728,22 +728,22 @@
     "addons": []
   },
   {
-    "id": "prod_1782156502885_909_romantic_ruby_red_anniversary_rose_delight",
-    "name": "Romantic Ruby Red Anniversary Rose Delight",
-    "title": "Romantic Ruby Red Anniversary Rose Delight",
-    "category": "Anniversary Bouquets",
-    "price": 3499,
-    "originalPrice": 4729,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg",
+    "id": "prod_1782156502875_859_enchanting_pink_lily___rose_serenity_bouquet",
+    "name": "Enchanting Pink Lily & Rose Serenity Bouquet",
+    "title": "Enchanting Pink Lily & Rose Serenity Bouquet",
+    "category": "Bouquets",
+    "price": 1699,
+    "originalPrice": 2299,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398789-1782156479641.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156398757-1782156479582.jpg"
     ],
-    "description": "Celebrate your timeless love with this breathtaking anniversary bouquet. Fifty opulent ruby red roses are expertly arranged and adorned with delicate baby's breath, all elegantly wrapped in black and gold. The stunning 'Happy Anniversary' bubble balloon adds a unique, festive touch, making it a perfect symbol of enduring affection.",
-    "shortDescription": "A grand bouquet of fifty ruby red roses, exquisitely wrapped, crowned with a 'Happy Anniversary' bubble balloon for your beloved.",
-    "longDescription": "Celebrate your timeless love with this breathtaking anniversary bouquet. Fifty opulent ruby red roses are expertly arranged and adorned with delicate baby's breath, all elegantly wrapped in black and gold. The stunning 'Happy Anniversary' bubble balloon adds a unique, festive touch, making it a perfect symbol of enduring affection.",
+    "description": "Discover profound elegance with this enchanting bouquet, featuring vibrant pink lilies, pristine white and yellow roses, and cheerful white chrysanthemums. Adorned with delicate baby's breath and lush greens, it’s artfully wrapped in rich brown and floral paper. Perfect for expressing heartfelt emotions on any special occasion.",
+    "shortDescription": "A captivating blend of pink lilies, delicate roses, and chrysanthemums, wrapped in elegant floral paper, conveying pure serenity.",
+    "longDescription": "Discover profound elegance with this enchanting bouquet, featuring vibrant pink lilies, pristine white and yellow roses, and cheerful white chrysanthemums. Adorned with delicate baby's breath and lush greens, it’s artfully wrapped in rich brown and floral paper. Perfect for expressing heartfelt emotions on any special occasion.",
     "rating": 5,
     "reviewsCount": 1,
     "isBestSeller": true,
@@ -864,39 +864,6 @@
     "addons": []
   },
   {
-    "id": "prod_1782156776882_37_radiant_sunflower_serenade_bouquet",
-    "name": "Radiant Sunflower Serenade Bouquet",
-    "title": "Radiant Sunflower Serenade Bouquet",
-    "category": "Bouquets",
-    "price": 1599,
-    "originalPrice": 2199,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg"
-    ],
-    "description": "Experience pure sunshine with this vibrant bouquet of cheerful sunflowers, elegantly arranged with lush greenery and delicate accents.",
-    "shortDescription": "Experience pure sunshine with this vibrant bouquet of cheerful sunflowers, elegantly arranged with lush greenery and delicate accents.",
-    "longDescription": "Embrace the warmth of the 'Radiant Sunflower Serenade,' a captivating bouquet showcasing the majestic beauty of bright sunflowers. Artfully combined with lush green foliage and subtle pink fillers, this arrangement is thoughtfully wrapped in rustic brown and soft pink paper, making it a perfect gift to brighten anyone's day and spread happiness.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-22T19:32:56.912+00:00",
-    "sku": null,
-    "quantity": 1,
-    "lowStockAlert": 0,
-    "deliverySettings": {},
-    "addons": []
-  },
-  {
     "id": "prod_1782156776882_620_monochrome_elegance_chocolate_delight_hamper",
     "name": "Monochrome Elegance Chocolate Delight Hamper",
     "title": "Monochrome Elegance Chocolate Delight Hamper",
@@ -914,6 +881,39 @@
     "description": "A sophisticated collection of Cadbury Dairy Milk and Ferrero Rocher chocolates, exquisitely presented in a stylish checkered hamper.",
     "shortDescription": "A sophisticated collection of Cadbury Dairy Milk and Ferrero Rocher chocolates, exquisitely presented in a stylish checkered hamper.",
     "longDescription": "Presenting the 'Monochrome Elegance Chocolate Delight Hamper,' a refined selection for the discerning chocolate lover. This luxurious basket features an generous array of classic Cadbury Dairy Milk bars paired with the rich, nutty indulgence of Ferrero Rocher. Housed in a striking black and white checkered bag and adorned with a shimmering silver bow, it’s an impeccable gift for any celebration.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-22T19:32:56.912+00:00",
+    "sku": null,
+    "quantity": 1,
+    "lowStockAlert": 0,
+    "deliverySettings": {},
+    "addons": []
+  },
+  {
+    "id": "prod_1782156776882_37_radiant_sunflower_serenade_bouquet",
+    "name": "Radiant Sunflower Serenade Bouquet",
+    "title": "Radiant Sunflower Serenade Bouquet",
+    "category": "Bouquets",
+    "price": 1599,
+    "originalPrice": 2199,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156661065-1782156751924.jpg"
+    ],
+    "description": "Experience pure sunshine with this vibrant bouquet of cheerful sunflowers, elegantly arranged with lush greenery and delicate accents.",
+    "shortDescription": "Experience pure sunshine with this vibrant bouquet of cheerful sunflowers, elegantly arranged with lush greenery and delicate accents.",
+    "longDescription": "Embrace the warmth of the 'Radiant Sunflower Serenade,' a captivating bouquet showcasing the majestic beauty of bright sunflowers. Artfully combined with lush green foliage and subtle pink fillers, this arrangement is thoughtfully wrapped in rustic brown and soft pink paper, making it a perfect gift to brighten anyone's day and spread happiness.",
     "rating": 5,
     "reviewsCount": 1,
     "isBestSeller": true,
@@ -970,39 +970,6 @@
     "addons": []
   },
   {
-    "id": "prod_1782157052254_762_radiant_sparkle_blooms_basket",
-    "name": "Radiant Sparkle Blooms Basket",
-    "title": "Radiant Sparkle Blooms Basket",
-    "category": "Flower Baskets",
-    "price": 2199,
-    "originalPrice": 2975,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg"
-    ],
-    "description": "Celebrate milestones with the \"Radiant Sparkle Blooms Basket,\" a breathtaking arrangement featuring cheerful sunflowers, romantic red and pink roses, elegant lilies, and delicate baby's breath. Presented in a sophisticated black basket adorned with sparkling details and a charming butterfly, this basket is an ideal gift for anniversaries, birthdays, or to simply brighten someone's day with its radiant charm.",
-    "shortDescription": "A vibrant medley of sunflowers, roses, and lilies in a dazzling black sparkling basket, celebrating joy and beauty.",
-    "longDescription": "Celebrate milestones with the \"Radiant Sparkle Blooms Basket,\" a breathtaking arrangement featuring cheerful sunflowers, romantic red and pink roses, elegant lilies, and delicate baby's breath. Presented in a sophisticated black basket adorned with sparkling details and a charming butterfly, this basket is an ideal gift for anniversaries, birthdays, or to simply brighten someone's day with its radiant charm.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-22T19:37:32.293+00:00",
-    "sku": null,
-    "quantity": 1,
-    "lowStockAlert": 0,
-    "deliverySettings": {},
-    "addons": []
-  },
-  {
     "id": "prod_1782157052254_275_velvet_dream_chocolate_delight",
     "name": "Velvet Dream Chocolate Delight",
     "title": "Velvet Dream Chocolate Delight",
@@ -1037,6 +1004,39 @@
       "customCharge": 50,
       "customChargeEnabled": false
     },
+    "addons": []
+  },
+  {
+    "id": "prod_1782157052254_762_radiant_sparkle_blooms_basket",
+    "name": "Radiant Sparkle Blooms Basket",
+    "title": "Radiant Sparkle Blooms Basket",
+    "category": "Flower Baskets",
+    "price": 2199,
+    "originalPrice": 2975,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782156941833-1782157027905.jpg"
+    ],
+    "description": "Celebrate milestones with the \"Radiant Sparkle Blooms Basket,\" a breathtaking arrangement featuring cheerful sunflowers, romantic red and pink roses, elegant lilies, and delicate baby's breath. Presented in a sophisticated black basket adorned with sparkling details and a charming butterfly, this basket is an ideal gift for anniversaries, birthdays, or to simply brighten someone's day with its radiant charm.",
+    "shortDescription": "A vibrant medley of sunflowers, roses, and lilies in a dazzling black sparkling basket, celebrating joy and beauty.",
+    "longDescription": "Celebrate milestones with the \"Radiant Sparkle Blooms Basket,\" a breathtaking arrangement featuring cheerful sunflowers, romantic red and pink roses, elegant lilies, and delicate baby's breath. Presented in a sophisticated black basket adorned with sparkling details and a charming butterfly, this basket is an ideal gift for anniversaries, birthdays, or to simply brighten someone's day with its radiant charm.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-22T19:37:32.293+00:00",
+    "sku": null,
+    "quantity": 1,
+    "lowStockAlert": 0,
+    "deliverySettings": {},
     "addons": []
   },
   {
@@ -1579,22 +1579,22 @@
     "addons": []
   },
   {
-    "id": "prod_1782195380004_sweet_blossom_chocolate_floral",
-    "name": "Sweet Blossom Chocolate & Floral Hamper",
-    "title": "Sweet Blossom Chocolate & Floral Hamper",
-    "category": "Gift Hampers",
-    "price": 2499,
-    "originalPrice": 3499,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg",
+    "id": "prod_1782195380003_sunny_fields_chocolate_ferrero",
+    "name": "Sunny Fields Chocolate & Ferrero Hamper",
+    "title": "Sunny Fields Chocolate & Ferrero Hamper",
+    "category": "Chocolate Bouquets",
+    "price": 1599,
+    "originalPrice": 2199,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg"
     ],
-    "description": "A premium designer gift bag filled with Cadbury Dairy Milk, Bournville, fresh white roses, stargazer lilies, red berries, and pampas grass.",
-    "shortDescription": "A luxury floral and chocolate hamper with Dairy Milk, Bournville, and fresh flowers.",
-    "longDescription": "Celebrate milestones with this unique, double-delight hamper. Features a luxury designer white gift bag filled with fresh white roses, stargazer lilies, red berry accents, and Cadbury Dairy Milk Silk/Bournville chocolate bars, topped with a dual black-and-red satin bow. Pune Sajawat Florist's signature creation for birthdays, anniversaries, or corporate celebrations.",
+    "description": "A bright yellow gift bag filled with Cadbury Dairy Milk chocolate bars and golden Ferrero Rocher wrapped in rustic mesh, tied with a blue checkered ribbon.",
+    "shortDescription": "A cheerful yellow hamper filled with Cadbury Dairy Milk and Ferrero Rocher.",
+    "longDescription": "Brighten their day with this charming chocolate hamper. Features a curated selection of Cadbury Dairy Milk bars and golden Ferrero Rocher hazelnut chocolates wrapped in rustic mesh, beautifully presented in a sunny yellow gift box bag and tied with a sky blue checkered gingham bow. A perfect gift for birthdays or children in Pune.",
     "rating": 5,
     "reviewsCount": 1,
     "isBestSeller": true,
@@ -1605,9 +1605,9 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-23T06:17:49.614+00:00",
-    "sku": "SKU-HAM-SWEET-BLOSSOM",
-    "quantity": 12,
-    "lowStockAlert": 2,
+    "sku": "SKU-CHO-SUNNY-FIELDS",
+    "quantity": 25,
+    "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
       "night": true,
@@ -1663,6 +1663,48 @@
     "addons": []
   },
   {
+    "id": "prod_1782195380004_sweet_blossom_chocolate_floral",
+    "name": "Sweet Blossom Chocolate & Floral Hamper",
+    "title": "Sweet Blossom Chocolate & Floral Hamper",
+    "category": "Gift Hampers",
+    "price": 2499,
+    "originalPrice": 3499,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368202-1782195380004.jpg"
+    ],
+    "description": "A premium designer gift bag filled with Cadbury Dairy Milk, Bournville, fresh white roses, stargazer lilies, red berries, and pampas grass.",
+    "shortDescription": "A luxury floral and chocolate hamper with Dairy Milk, Bournville, and fresh flowers.",
+    "longDescription": "Celebrate milestones with this unique, double-delight hamper. Features a luxury designer white gift bag filled with fresh white roses, stargazer lilies, red berry accents, and Cadbury Dairy Milk Silk/Bournville chocolate bars, topped with a dual black-and-red satin bow. Pune Sajawat Florist's signature creation for birthdays, anniversaries, or corporate celebrations.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": true,
+    "isRecommended": true,
+    "isFeatured": true,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-23T06:17:49.614+00:00",
+    "sku": "SKU-HAM-SWEET-BLOSSOM",
+    "quantity": 12,
+    "lowStockAlert": 2,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
+      "customCharge": 0,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
     "id": "prod_1782195380002_pure_elegance_white_rose",
     "name": "Pure Elegance White Rose Bouquet",
     "title": "Pure Elegance White Rose Bouquet",
@@ -1692,48 +1734,6 @@
     "sku": "SKU-ROS-WHITE-PURE",
     "quantity": 20,
     "lowStockAlert": 4,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 0,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
-    "id": "prod_1782195380003_sunny_fields_chocolate_ferrero",
-    "name": "Sunny Fields Chocolate & Ferrero Hamper",
-    "title": "Sunny Fields Chocolate & Ferrero Hamper",
-    "category": "Chocolate Bouquets",
-    "price": 1599,
-    "originalPrice": 2199,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195368174-1782195380003.jpg"
-    ],
-    "description": "A bright yellow gift bag filled with Cadbury Dairy Milk chocolate bars and golden Ferrero Rocher wrapped in rustic mesh, tied with a blue checkered ribbon.",
-    "shortDescription": "A cheerful yellow hamper filled with Cadbury Dairy Milk and Ferrero Rocher.",
-    "longDescription": "Brighten their day with this charming chocolate hamper. Features a curated selection of Cadbury Dairy Milk bars and golden Ferrero Rocher hazelnut chocolates wrapped in rustic mesh, beautifully presented in a sunny yellow gift box bag and tied with a sky blue checkered gingham bow. A perfect gift for birthdays or children in Pune.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": true,
-    "isRecommended": true,
-    "isFeatured": true,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-23T06:17:49.614+00:00",
-    "sku": "SKU-CHO-SUNNY-FIELDS",
-    "quantity": 25,
-    "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
       "night": true,
@@ -1793,50 +1793,6 @@
     "addons": []
   },
   {
-    "id": "prod_1782195640003_sweet_harvest_lychee_heart",
-    "name": "Sweet Harvest Lychee Heart Bouquet",
-    "title": "Sweet Harvest Lychee Heart Bouquet",
-    "category": "Gift Hampers",
-    "price": 1999,
-    "originalPrice": 2799,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782197313344-1782197330002.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782197313344-1782197330002.jpg"
-    ],
-    "description": "A unique heart-shaped gourmet fruit bouquet of fresh red lychees, accented with baby's breath and wrapped in black craft sheets.",
-    "shortDescription": "A unique heart-shaped bouquet of fresh red lychees and baby's breath.",
-    "longDescription": "Surprise them with a unique and healthy treat! The Sweet Harvest Lychee Heart Bouquet features fresh, handpicked red lychee fruits arranged in a beautiful heart shape, surrounded by delicate white baby's breath. Hand-wrapped in premium black craft paper with a red ribbon bow. A wonderful and delicious gift for birthdays, anniversaries, or get-well wishes in Pune.",
-    "rating": 5,
-    "reviewsCount": 1,
-    "isBestSeller": true,
-    "isNew": true,
-    "isTrending": true,
-    "isRecommended": true,
-    "isFeatured": true,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-23T06:21:56.077+00:00",
-    "sku": "SKU-HAM-LYCHEE-HEART",
-    "quantity": 10,
-    "lowStockAlert": 2,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 0,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
     "id": "prod_1782195640005_regal_splendour_rose_lily",
     "name": "Regal Splendour Rose & Lily Bloom Box",
     "title": "Regal Splendour Rose & Lily Bloom Box",
@@ -1869,6 +1825,50 @@
     "createdAt": "2026-06-23T06:21:56.077+00:00",
     "sku": "SKU-FLW-REGAL-SPLEN",
     "quantity": 12,
+    "lowStockAlert": 2,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
+      "customCharge": 0,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1782195640003_sweet_harvest_lychee_heart",
+    "name": "Sweet Harvest Lychee Heart Bouquet",
+    "title": "Sweet Harvest Lychee Heart Bouquet",
+    "category": "Gift Hampers",
+    "price": 1999,
+    "originalPrice": 2799,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782197313344-1782197330002.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782195631380-1782195640003.jpg",
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1782197313344-1782197330002.jpg"
+    ],
+    "description": "A unique heart-shaped gourmet fruit bouquet of fresh red lychees, accented with baby's breath and wrapped in black craft sheets.",
+    "shortDescription": "A unique heart-shaped bouquet of fresh red lychees and baby's breath.",
+    "longDescription": "Surprise them with a unique and healthy treat! The Sweet Harvest Lychee Heart Bouquet features fresh, handpicked red lychee fruits arranged in a beautiful heart shape, surrounded by delicate white baby's breath. Hand-wrapped in premium black craft paper with a red ribbon bow. A wonderful and delicious gift for birthdays, anniversaries, or get-well wishes in Pune.",
+    "rating": 5,
+    "reviewsCount": 1,
+    "isBestSeller": true,
+    "isNew": true,
+    "isTrending": true,
+    "isRecommended": true,
+    "isFeatured": true,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-23T06:21:56.077+00:00",
+    "sku": "SKU-HAM-LYCHEE-HEART",
+    "quantity": 10,
     "lowStockAlert": 2,
     "deliverySettings": {
       "fixed": true,
@@ -1967,24 +1967,24 @@
     "addons": []
   },
   {
-    "id": "prod_cake_pineapple",
-    "name": "Tropical Pineapple Cake",
-    "title": "Tropical Pineapple Cake",
+    "id": "prod_cake_lemon_drizzle",
+    "name": "Zesty Lemon Drizzle Cake",
+    "title": "Zesty Lemon Drizzle Cake",
     "category": "Cakes",
     "price": 549,
     "originalPrice": 749,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg",
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg"
     ],
-    "description": "Freshly whipped cream cake layered with juicy pineapple chunks.",
-    "shortDescription": "Freshly whipped cream cake layered with juicy pineapple chunks.",
-    "longDescription": "A crowd favorite in Pune! This Tropical Pineapple Cake features a light vanilla sponge soaked in pineapple syrup, layered with fresh whipped cream and sweet pineapple chunks, garnished with cherry and pineapple slices.",
-    "rating": 4.5,
-    "reviewsCount": 23,
+    "description": "Moist lemon sponge soaked in zesty lemon syrup with a sugar glaze.",
+    "shortDescription": "Moist lemon sponge soaked in zesty lemon syrup with a sugar glaze.",
+    "longDescription": "Refreshingly tangy and sweet, our Zesty Lemon Drizzle Cake is infused with fresh lemon zest and juice, soaked in a sweet lemon syrup, and drizzled with a light sugar glaze.",
+    "rating": 4.7,
+    "reviewsCount": 27,
     "isBestSeller": false,
     "isNew": false,
     "isTrending": false,
@@ -1993,8 +1993,8 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-PINEAPPLE",
-    "quantity": 25,
+    "sku": "SKU-CAKE-LEMON_DRIZZLE",
+    "quantity": 18,
     "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
@@ -2093,24 +2093,24 @@
     "addons": []
   },
   {
-    "id": "prod_cake_tiramisu_celebration",
-    "name": "Royal Tiramisu Celebration Cake",
-    "title": "Royal Tiramisu Celebration Cake",
+    "id": "prod_cake_mango_mousse",
+    "name": "Alphonso Mango Mousse Cake",
+    "title": "Alphonso Mango Mousse Cake",
     "category": "Cakes",
-    "price": 999,
-    "originalPrice": 1299,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg",
+    "price": 799,
+    "originalPrice": 999,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg"
     ],
-    "description": "Italian classic layered with coffee-soaked ladyfingers and mascarpone.",
-    "shortDescription": "Italian classic layered with coffee-soaked ladyfingers and mascarpone.",
-    "longDescription": "Our cake version of the famous Italian dessert. Fluffy espresso-soaked sponge layered with velvety mascarpone cheese cream, elegantly dusted with dark French cocoa powder.",
-    "rating": 4.7,
-    "reviewsCount": 10,
+    "description": "Light, airy mango mousse cake made with real Alphonso mango pulp.",
+    "shortDescription": "Light, airy mango mousse cake made with real Alphonso mango pulp.",
+    "longDescription": "Our seasonal Alphonso Mango Mousse Cake features a delicate vanilla base topped with a smooth, light, and fruity mango mousse, finished with a bright mango gel glaze.",
+    "rating": 4.8,
+    "reviewsCount": 17,
     "isBestSeller": false,
     "isNew": false,
     "isTrending": false,
@@ -2119,8 +2119,50 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-TIRAMISU_CELEBRATION",
-    "quantity": 34,
+    "sku": "SKU-CAKE-MANGO_MOUSSE",
+    "quantity": 30,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
+      "customCharge": 0,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_cake_kitkat_chocolate",
+    "name": "KitKat Celebration Chocolate Cake",
+    "title": "KitKat Celebration Chocolate Cake",
+    "category": "Cakes",
+    "price": 1199,
+    "originalPrice": 1499,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg"
+    ],
+    "description": "Rich chocolate cake surrounded by KitKat bars and topped with gems.",
+    "shortDescription": "Rich chocolate cake surrounded by KitKat bars and topped with gems.",
+    "longDescription": "The ultimate chocolate party cake! A moist chocolate cake loaded with chocolate fudge, surrounded by a border of crispy KitKat bars, and crowned with colorful gems.",
+    "rating": 4.5,
+    "reviewsCount": 14,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-26T13:34:05.818+00:00",
+    "sku": "SKU-CAKE-KITKAT_CHOCOLATE",
+    "quantity": 19,
     "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
@@ -2162,6 +2204,48 @@
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
     "sku": "SKU-CAKE-BLACK_FOREST",
+    "quantity": 25,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
+      "customCharge": 0,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_cake_pineapple",
+    "name": "Tropical Pineapple Cake",
+    "title": "Tropical Pineapple Cake",
+    "category": "Cakes",
+    "price": 549,
+    "originalPrice": 749,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_pineapple.jpg"
+    ],
+    "description": "Freshly whipped cream cake layered with juicy pineapple chunks.",
+    "shortDescription": "Freshly whipped cream cake layered with juicy pineapple chunks.",
+    "longDescription": "A crowd favorite in Pune! This Tropical Pineapple Cake features a light vanilla sponge soaked in pineapple syrup, layered with fresh whipped cream and sweet pineapple chunks, garnished with cherry and pineapple slices.",
+    "rating": 4.5,
+    "reviewsCount": 23,
+    "isBestSeller": false,
+    "isNew": false,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-26T13:34:05.818+00:00",
+    "sku": "SKU-CAKE-PINEAPPLE",
     "quantity": 25,
     "lowStockAlert": 3,
     "deliverySettings": {
@@ -2219,24 +2303,66 @@
     "addons": []
   },
   {
-    "id": "prod_cake_white_forest",
-    "name": "Exquisite White Forest Cake",
-    "title": "Exquisite White Forest Cake",
+    "id": "prod_cake_ferrero_rocher",
+    "name": "Luxurious Ferrero Rocher Cake",
+    "title": "Luxurious Ferrero Rocher Cake",
     "category": "Cakes",
-    "price": 649,
-    "originalPrice": 849,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg",
+    "price": 1499,
+    "originalPrice": 1899,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg"
     ],
-    "description": "Vanilla sponge with white chocolate flakes, cherries, and fresh cream.",
-    "shortDescription": "Vanilla sponge with white chocolate flakes, cherries, and fresh cream.",
-    "longDescription": "A delicious twist on the classic! White Forest Cake layers light vanilla sponge with sweet red cherries and whipped cream, coated with snow-white chocolate curls.",
-    "rating": 4.9,
-    "reviewsCount": 29,
+    "description": "Decadent hazelnut chocolate cake decorated with Ferrero Rocher truffles.",
+    "shortDescription": "Decadent hazelnut chocolate cake decorated with Ferrero Rocher truffles.",
+    "longDescription": "Our premium Ferrero Rocher Cake features chocolate hazelnut sponge layered with Nutella glaze, crunchy wafer bits, toasted hazelnuts, topped with original Ferrero Rocher chocolates.",
+    "rating": 4.5,
+    "reviewsCount": 8,
+    "isBestSeller": true,
+    "isNew": false,
+    "isTrending": false,
+    "isRecommended": false,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-06-26T13:34:05.818+00:00",
+    "sku": "SKU-CAKE-FERRERO_ROCHER",
+    "quantity": 29,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true,
+      "customCharge": 0,
+      "customChargeEnabled": false
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_cake_tiramisu_celebration",
+    "name": "Royal Tiramisu Celebration Cake",
+    "title": "Royal Tiramisu Celebration Cake",
+    "category": "Cakes",
+    "price": 999,
+    "originalPrice": 1299,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_tiramisu_celebration.jpg"
+    ],
+    "description": "Italian classic layered with coffee-soaked ladyfingers and mascarpone.",
+    "shortDescription": "Italian classic layered with coffee-soaked ladyfingers and mascarpone.",
+    "longDescription": "Our cake version of the famous Italian dessert. Fluffy espresso-soaked sponge layered with velvety mascarpone cheese cream, elegantly dusted with dark French cocoa powder.",
+    "rating": 4.7,
+    "reviewsCount": 10,
     "isBestSeller": false,
     "isNew": false,
     "isTrending": false,
@@ -2245,8 +2371,8 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-WHITE_FOREST",
-    "quantity": 27,
+    "sku": "SKU-CAKE-TIRAMISU_CELEBRATION",
+    "quantity": 34,
     "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
@@ -2303,76 +2429,34 @@
     "addons": []
   },
   {
-    "id": "prod_cake_ferrero_rocher",
-    "name": "Luxurious Ferrero Rocher Cake",
-    "title": "Luxurious Ferrero Rocher Cake",
+    "id": "prod_cake_fresh_fruit",
+    "name": "Premium Fresh Fruit Cake",
+    "title": "Premium Fresh Fruit Cake",
     "category": "Cakes",
-    "price": 1499,
-    "originalPrice": 1899,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg",
+    "price": 999,
+    "originalPrice": 1299,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_ferrero_rocher.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg"
     ],
-    "description": "Decadent hazelnut chocolate cake decorated with Ferrero Rocher truffles.",
-    "shortDescription": "Decadent hazelnut chocolate cake decorated with Ferrero Rocher truffles.",
-    "longDescription": "Our premium Ferrero Rocher Cake features chocolate hazelnut sponge layered with Nutella glaze, crunchy wafer bits, toasted hazelnuts, topped with original Ferrero Rocher chocolates.",
+    "description": "Vanilla sponge layered with fresh custard cream and loaded with seasonal fruits.",
+    "shortDescription": "Vanilla sponge layered with fresh custard cream and loaded with seasonal fruits.",
+    "longDescription": "Celebrate healthy indulgence with our Premium Fresh Fruit Cake. It is loaded with kiwi, apple, grapes, pineapple, orange, and pomegranate on a bed of fresh whipped cream and soft vanilla sponge.",
     "rating": 4.5,
-    "reviewsCount": 8,
-    "isBestSeller": true,
+    "reviewsCount": 12,
+    "isBestSeller": false,
     "isNew": false,
     "isTrending": false,
-    "isRecommended": false,
+    "isRecommended": true,
     "isFeatured": false,
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-FERRERO_ROCHER",
-    "quantity": 29,
-    "lowStockAlert": 3,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 0,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
-    "id": "prod_cake_kitkat_chocolate",
-    "name": "KitKat Celebration Chocolate Cake",
-    "title": "KitKat Celebration Chocolate Cake",
-    "category": "Cakes",
-    "price": 1199,
-    "originalPrice": 1499,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_kitkat_chocolate.jpg"
-    ],
-    "description": "Rich chocolate cake surrounded by KitKat bars and topped with gems.",
-    "shortDescription": "Rich chocolate cake surrounded by KitKat bars and topped with gems.",
-    "longDescription": "The ultimate chocolate party cake! A moist chocolate cake loaded with chocolate fudge, surrounded by a border of crispy KitKat bars, and crowned with colorful gems.",
-    "rating": 4.5,
-    "reviewsCount": 14,
-    "isBestSeller": false,
-    "isNew": true,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-KITKAT_CHOCOLATE",
-    "quantity": 19,
+    "sku": "SKU-CAKE-FRESH_FRUIT",
+    "quantity": 25,
     "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
@@ -2429,66 +2513,24 @@
     "addons": []
   },
   {
-    "id": "prod_cake_fresh_fruit",
-    "name": "Premium Fresh Fruit Cake",
-    "title": "Premium Fresh Fruit Cake",
+    "id": "prod_cake_white_forest",
+    "name": "Exquisite White Forest Cake",
+    "title": "Exquisite White Forest Cake",
     "category": "Cakes",
-    "price": 999,
-    "originalPrice": 1299,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg",
+    "price": 649,
+    "originalPrice": 849,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg",
     "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg"
     ],
     "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_fresh_fruit.jpg"
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_white_forest.jpg"
     ],
-    "description": "Vanilla sponge layered with fresh custard cream and loaded with seasonal fruits.",
-    "shortDescription": "Vanilla sponge layered with fresh custard cream and loaded with seasonal fruits.",
-    "longDescription": "Celebrate healthy indulgence with our Premium Fresh Fruit Cake. It is loaded with kiwi, apple, grapes, pineapple, orange, and pomegranate on a bed of fresh whipped cream and soft vanilla sponge.",
-    "rating": 4.5,
-    "reviewsCount": 12,
-    "isBestSeller": false,
-    "isNew": false,
-    "isTrending": false,
-    "isRecommended": true,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-FRESH_FRUIT",
-    "quantity": 25,
-    "lowStockAlert": 3,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 0,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
-    "id": "prod_cake_lemon_drizzle",
-    "name": "Zesty Lemon Drizzle Cake",
-    "title": "Zesty Lemon Drizzle Cake",
-    "category": "Cakes",
-    "price": 549,
-    "originalPrice": 749,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_lemon_drizzle.jpg"
-    ],
-    "description": "Moist lemon sponge soaked in zesty lemon syrup with a sugar glaze.",
-    "shortDescription": "Moist lemon sponge soaked in zesty lemon syrup with a sugar glaze.",
-    "longDescription": "Refreshingly tangy and sweet, our Zesty Lemon Drizzle Cake is infused with fresh lemon zest and juice, soaked in a sweet lemon syrup, and drizzled with a light sugar glaze.",
-    "rating": 4.7,
-    "reviewsCount": 27,
+    "description": "Vanilla sponge with white chocolate flakes, cherries, and fresh cream.",
+    "shortDescription": "Vanilla sponge with white chocolate flakes, cherries, and fresh cream.",
+    "longDescription": "A delicious twist on the classic! White Forest Cake layers light vanilla sponge with sweet red cherries and whipped cream, coated with snow-white chocolate curls.",
+    "rating": 4.9,
+    "reviewsCount": 29,
     "isBestSeller": false,
     "isNew": false,
     "isTrending": false,
@@ -2497,50 +2539,8 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-LEMON_DRIZZLE",
-    "quantity": 18,
-    "lowStockAlert": 3,
-    "deliverySettings": {
-      "fixed": true,
-      "night": true,
-      "charge": 0,
-      "sameday": true,
-      "midnight": true,
-      "available": true,
-      "customCharge": 0,
-      "customChargeEnabled": false
-    },
-    "addons": []
-  },
-  {
-    "id": "prod_cake_mango_mousse",
-    "name": "Alphonso Mango Mousse Cake",
-    "title": "Alphonso Mango Mousse Cake",
-    "category": "Cakes",
-    "price": 799,
-    "originalPrice": 999,
-    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg",
-    "images": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg"
-    ],
-    "galleryImages": [
-      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/prod_cake_mango_mousse.jpg"
-    ],
-    "description": "Light, airy mango mousse cake made with real Alphonso mango pulp.",
-    "shortDescription": "Light, airy mango mousse cake made with real Alphonso mango pulp.",
-    "longDescription": "Our seasonal Alphonso Mango Mousse Cake features a delicate vanilla base topped with a smooth, light, and fruity mango mousse, finished with a bright mango gel glaze.",
-    "rating": 4.8,
-    "reviewsCount": 17,
-    "isBestSeller": false,
-    "isNew": false,
-    "isTrending": false,
-    "isRecommended": false,
-    "isFeatured": false,
-    "isEnabled": true,
-    "isHidden": false,
-    "createdAt": "2026-06-26T13:34:05.818+00:00",
-    "sku": "SKU-CAKE-MANGO_MOUSSE",
-    "quantity": 30,
+    "sku": "SKU-CAKE-WHITE_FOREST",
+    "quantity": 27,
     "lowStockAlert": 3,
     "deliverySettings": {
       "fixed": true,
@@ -3759,6 +3759,206 @@
     "isEnabled": true,
     "isHidden": false,
     "createdAt": "2026-07-08T16:37:43.972+00:00",
+    "sku": null,
+    "quantity": 10,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1783531550217_2707",
+    "name": "Birthday Bliss Celebration Box",
+    "title": "Birthday Bliss Celebration Box",
+    "category": "Birthday Bouquets",
+    "price": 2499,
+    "originalPrice": 3499,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464729-1783531549409.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464729-1783531549409.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464729-1783531549409.jpg"
+    ],
+    "description": "Celebrate milestones with our Birthday Bliss Celebration Box. This luxurious arrangement features a vibrant mix of fresh lilies, charming roses, delicate carnations, and lush fillers, artfully arranged in a sophisticated golden box. Adorned with delightful butterflies, it includes indulgent chocolates and a charming 'Happy Birthday' balloon, making it the perfect grand gesture for a memorable birthday.",
+    "shortDescription": "A stunning floral box arrangement with vibrant blooms, chocolates, and a festive 'Happy Birthday' balloon for a truly special celebration.",
+    "longDescription": "Celebrate milestones with our Birthday Bliss Celebration Box. This luxurious arrangement features a vibrant mix of fresh lilies, charming roses, delicate carnations, and lush fillers, artfully arranged in a sophisticated golden box. Adorned with delightful butterflies, it includes indulgent chocolates and a charming 'Happy Birthday' balloon, making it the perfect grand gesture for a memorable birthday.",
+    "rating": 5,
+    "reviewsCount": 0,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": true,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-07-08T17:25:50.218+00:00",
+    "sku": null,
+    "quantity": 10,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1783531562502_8783",
+    "name": "Radiant Bloom Serenade",
+    "title": "Radiant Bloom Serenade",
+    "category": "Bouquets",
+    "price": 1799,
+    "originalPrice": 2499,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464698-1783531561294.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464698-1783531561294.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464698-1783531561294.jpg"
+    ],
+    "description": null,
+    "shortDescription": "A captivating blend of vibrant fuchsia lilies and delicate peach blooms, radiating warmth and elegance.",
+    "longDescription": "Experience the enchanting beauty of our Radiant Bloom Serenade, a hand-tied bouquet featuring magnificent fuchsia lilies as its breathtaking focal point. Complemented by clusters of soft peach carnations and delicate baby's breath, this arrangement exudes a joyful elegance. Wrapped in exquisite paper, it’s a perfect gesture to convey warmth, affection, and celebration for cherished moments.",
+    "rating": 5,
+    "reviewsCount": 0,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": true,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-07-08T17:26:02.502+00:00",
+    "sku": null,
+    "quantity": 10,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1783531572388_9893",
+    "name": "Golden Bloom Harmony",
+    "title": "Radiant Sunflower & Rose Symphony Bouquet",
+    "category": "Bouquets",
+    "price": 1499,
+    "originalPrice": 2099,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464665-1783531571407.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464665-1783531571407.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464665-1783531571407.jpg"
+    ],
+    "description": "Celebrate life's precious moments with our 'Golden Bloom Harmony' bouquet. This stunning arrangement features the sun-kissed radiance of bold sunflowers, passionate fiery orange roses, and the delicate elegance of fresh white chrysanthemums. Expertly hand-tied and wrapped in sophisticated black and white paper, this bouquet is perfect for brightening any day, expressing joy, or making a grand statement for any special occasion. A truly captivating floral gift.",
+    "shortDescription": "A vibrant symphony of golden sunflowers, fiery orange roses, and pristine white chrysanthemums, beautifully wrapped for an unforgettable gesture.",
+    "longDescription": "Celebrate life's precious moments with our 'Golden Bloom Harmony' bouquet. This stunning arrangement features the sun-kissed radiance of bold sunflowers, passionate fiery orange roses, and the delicate elegance of fresh white chrysanthemums. Expertly hand-tied and wrapped in sophisticated black and white paper, this bouquet is perfect for brightening any day, expressing joy, or making a grand statement for any special occasion. A truly captivating floral gift.",
+    "rating": 5,
+    "reviewsCount": 0,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": true,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-07-08T17:26:12.388+00:00",
+    "sku": null,
+    "quantity": 10,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1783531587343_5730",
+    "name": "Passionate Promise Rose & Lily Bouquet",
+    "title": "Passionate Promise Rose & Lily Bouquet",
+    "category": "Rose Bouquets",
+    "price": 2499,
+    "originalPrice": 3399,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464623-1783531586813.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464623-1783531586813.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464623-1783531586813.jpg"
+    ],
+    "description": "Express your deepest affections with our exquisite 'Passionate Promise' bouquet. This magnificent arrangement features a lavish cluster of pristine red roses, symbolizing enduring love and passion, beautifully complemented by the delicate elegance of pink lilies. Adorned with a heartfelt 'I LOVE YOU' ribbon and expertly wrapped in sophisticated black, it's the perfect declaration for anniversaries, special occasions, or simply to show someone they are cherished.",
+    "shortDescription": "A breathtaking arrangement of vibrant red roses and elegant pink lilies, conveying profound love with every bloom. Elegantly wrapped.",
+    "longDescription": "Express your deepest affections with our exquisite 'Passionate Promise' bouquet. This magnificent arrangement features a lavish cluster of pristine red roses, symbolizing enduring love and passion, beautifully complemented by the delicate elegance of pink lilies. Adorned with a heartfelt 'I LOVE YOU' ribbon and expertly wrapped in sophisticated black, it's the perfect declaration for anniversaries, special occasions, or simply to show someone they are cherished.",
+    "rating": 5,
+    "reviewsCount": 0,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": true,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-07-08T17:26:27.343+00:00",
+    "sku": null,
+    "quantity": 10,
+    "lowStockAlert": 3,
+    "deliverySettings": {
+      "fixed": true,
+      "night": true,
+      "charge": 0,
+      "sameday": true,
+      "midnight": true,
+      "available": true
+    },
+    "addons": []
+  },
+  {
+    "id": "prod_1783531598224_5090",
+    "name": "Celestial Lily Embrace",
+    "title": "Celestial Lily Embrace",
+    "category": "Bouquets",
+    "price": 1599,
+    "originalPrice": 2199,
+    "image": "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464588-1783531597716.jpg",
+    "images": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464588-1783531597716.jpg"
+    ],
+    "galleryImages": [
+      "https://borcyrarrlbwkuisjjoj.supabase.co/storage/v1/object/public/products/media__1783531464588-1783531597716.jpg"
+    ],
+    "description": "Presenting the Celestial Lily Embrace, a breathtaking bouquet featuring an exquisite collection of fresh, pristine white lilies. Each bloom radiates purity and refined elegance, complemented by delicate baby's breath. Expertly hand-tied and wrapped in sophisticated dual-tone paper, this arrangement is perfect for expressing heartfelt emotions, celebrating milestones, or simply brightening someone's day with timeless beauty. A truly magnificent floral gift.",
+    "shortDescription": "A stunning bouquet of pristine white lilies, elegantly wrapped, symbolizing purity and grace. Perfect for any special occasion.",
+    "longDescription": "Presenting the Celestial Lily Embrace, a breathtaking bouquet featuring an exquisite collection of fresh, pristine white lilies. Each bloom radiates purity and refined elegance, complemented by delicate baby's breath. Expertly hand-tied and wrapped in sophisticated dual-tone paper, this arrangement is perfect for expressing heartfelt emotions, celebrating milestones, or simply brightening someone's day with timeless beauty. A truly magnificent floral gift.",
+    "rating": 5,
+    "reviewsCount": 0,
+    "isBestSeller": false,
+    "isNew": true,
+    "isTrending": false,
+    "isRecommended": true,
+    "isFeatured": false,
+    "isEnabled": true,
+    "isHidden": false,
+    "createdAt": "2026-07-08T17:26:38.224+00:00",
     "sku": null,
     "quantity": 10,
     "lowStockAlert": 3,
