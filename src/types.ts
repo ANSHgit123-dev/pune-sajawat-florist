@@ -15,14 +15,14 @@ export interface ProductAddon {
 }
 
 export interface ProductDeliverySettings {
-  available: boolean;
-  charge: number;
-  sameday: boolean;
-  fixed: boolean;
-  night: boolean;
-  midnight: boolean;
-  customChargeEnabled: boolean;
-  customCharge: number;
+  available?: boolean;
+  charge?: number;
+  sameday?: boolean;
+  fixed?: boolean;
+  night?: boolean;
+  midnight?: boolean;
+  customChargeEnabled?: boolean;
+  customCharge?: number;
 }
 
 export interface Product {
