@@ -41,7 +41,7 @@ export default function Footer() {
             <div className="flex items-center gap-3 pt-2" id="footer-social-icons">
               {/* Instagram link */}
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/pune_sajawat_florist/"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Follow us on Instagram for beautiful layouts"

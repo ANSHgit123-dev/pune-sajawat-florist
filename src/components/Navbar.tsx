@@ -11,6 +11,7 @@ import {
   ChevronDown, 
   ChevronUp, 
   ChevronRight, 
+  ChevronLeft,
   Instagram,
   ArrowRight,
   History,
@@ -170,6 +171,10 @@ export default function Navbar({
   });
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const categoryStripRef = useRef<HTMLElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
   // Build dynamic categories from products
   const dynamicCategories = React.useMemo(() => {
@@ -204,6 +209,82 @@ export default function Navbar({
       emoji: emojiMap[cat] || "🌸"
     }));
   }, [dynamicCategories]);
+
+  // Monitor scroll position and overflow for category navigation
+  const checkScrollState = () => {
+    const el = categoryStripRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const hasOverflow = scrollWidth > clientWidth + 2;
+    setIsOverflowing(hasOverflow);
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
+  };
+
+  const scrollCategoryStrip = (direction: "left" | "right") => {
+    const el = categoryStripRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(220, Math.floor(el.clientWidth * 0.45));
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth"
+    });
+  };
+
+  useEffect(() => {
+    const el = categoryStripRef.current;
+    if (!el) return;
+
+    checkScrollState();
+
+    const handleScroll = () => {
+      checkScrollState();
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Support mouse wheel horizontal scrolling when hovered
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+        const atStart = el.scrollLeft <= 0;
+        const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 1;
+        if ((e.deltaY > 0 && !atEnd) || (e.deltaY < 0 && !atStart)) {
+          e.preventDefault();
+          el.scrollBy({ left: e.deltaY, behavior: "auto" });
+        }
+      }
+    };
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("resize", checkScrollState);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        checkScrollState();
+      });
+      resizeObserver.observe(el);
+    }
+
+    // Secondary check after layout/fonts load
+    const timer = setTimeout(checkScrollState, 150);
+
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener("scroll", handleScroll);
+      el.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("resize", checkScrollState);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [dynamicCategories]);
+
+  // Keep selected category visible when changed
+  useEffect(() => {
+    if (!categoryStripRef.current || !currentCategory) return;
+    const activeBtn = categoryStripRef.current.querySelector(".nav-cat-item-active") as HTMLElement | null;
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  }, [currentCategory]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -268,7 +349,7 @@ export default function Navbar({
   };
 
   const openInstagram = () => {
-    window.open("https://www.instagram.com", "_blank");
+    window.open("https://www.instagram.com/pune_sajawat_florist/", "_blank");
   };
 
   const handleCategoryClick = (categoryValue: string) => {
@@ -672,13 +753,15 @@ export default function Navbar({
             </button>
 
             {/* Instagram */}
-            <button 
-              onClick={openInstagram}
+            <a 
+              href="https://www.instagram.com/pune_sajawat_florist/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:inline-flex p-1.5 sm:p-2 text-stone-600 rounded-full hover:bg-stone-50 hover:text-[#82862F] transition-all cursor-pointer"
               title="Instagram"
             >
               <Instagram className="w-4 h-4" />
-            </button>
+            </a>
 
             {/* WhatsApp */}
             <button 
@@ -717,10 +800,37 @@ export default function Navbar({
 
         </div>
 
-        {/* Row B: Horizontal Category Strip (Desktop Only) — NO "More" dropdown */}
-        <div className="hidden md:flex w-full bg-white border-t border-stone-100 py-1 select-none h-10 justify-center items-center" id="fnp-menus-strip">
-          <div className="max-w-[1280px] mx-auto px-4 flex justify-center items-center h-full w-full">
-            <nav className="nav-category-strip">
+        {/* Row B: Horizontal Category Navigation Bar */}
+        <div 
+          className="flex w-full bg-white border-t border-stone-100 py-1 select-none h-10 items-center relative overflow-hidden" 
+          id="fnp-menus-strip"
+        >
+          <div className="max-w-[1440px] mx-auto px-2 sm:px-4 flex items-center h-full w-full relative">
+            
+            {/* Left Scroll Arrow Control (Desktop) */}
+            <div 
+              className={`hidden md:flex absolute left-1 sm:left-2 top-0 bottom-0 items-center pr-3 pl-1 bg-gradient-to-r from-white via-white/95 to-transparent z-10 transition-opacity duration-200 ${
+                canScrollLeft ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => scrollCategoryStrip("left")}
+                disabled={!canScrollLeft}
+                aria-label="Scroll categories left"
+                className="flex items-center justify-center w-7 h-7 rounded-full bg-white text-stone-600 hover:text-[#82862F] hover:bg-[#F9FAEE] border border-stone-200/90 shadow-sm transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Scrollable Categories Navigation List */}
+            <nav 
+              ref={categoryStripRef}
+              className={`nav-category-strip ${isOverflowing ? "justify-start" : "justify-center"}`}
+              aria-label="Product Categories Navigation"
+              id="header-categories-nav"
+            >
               {dynamicCategories.map((cat) => {
                 const isActive = currentCategory === cat;
                 return (
@@ -728,6 +838,8 @@ export default function Navbar({
                     key={cat}
                     onClick={() => handleCategoryClick(cat)}
                     className={`nav-cat-item ${isActive ? "nav-cat-item-active" : ""}`}
+                    id={`nav-cat-${cat.replace(/\s+/g, "-").toLowerCase()}`}
+                    type="button"
                   >
                     <span className="nav-cat-icon">
                       {NavCategoryIcons[cat] || (
@@ -741,6 +853,24 @@ export default function Navbar({
                 );
               })}
             </nav>
+
+            {/* Right Scroll Arrow Control (Desktop) */}
+            <div 
+              className={`hidden md:flex absolute right-1 sm:right-2 top-0 bottom-0 items-center pl-3 pr-1 bg-gradient-to-l from-white via-white/95 to-transparent z-10 transition-opacity duration-200 ${
+                canScrollRight ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => scrollCategoryStrip("right")}
+                disabled={!canScrollRight}
+                aria-label="Scroll categories right"
+                className="flex items-center justify-center w-7 h-7 rounded-full bg-white text-stone-600 hover:text-[#82862F] hover:bg-[#F9FAEE] border border-stone-200/90 shadow-sm transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
           </div>
         </div>
       </header>

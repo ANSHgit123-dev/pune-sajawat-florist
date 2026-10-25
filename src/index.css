@@ -275,18 +275,20 @@ body {
 }
 
 /* ============================================
-   NAVBAR CATEGORY STRIP (DESKTOP)
+   NAVBAR CATEGORY STRIP (RESPONSIVE HORIZONTAL SCROLL)
    ============================================ */
 
 .nav-category-strip {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 0 8px;
+  padding: 0 16px;
+  width: 100%;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nav-category-strip::-webkit-scrollbar {
