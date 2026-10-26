@@ -160,6 +160,24 @@ const requireSessionWithCsrf = async (req: express.Request, res: express.Respons
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// Security hardening: Disable X-Powered-By header to prevent framework fingerprinting
+app.disable("x-powered-by");
+
+// Defense-in-depth HTTP security headers middleware for standalone Node / local runtime.
+// When deployed on Vercel, vercel.json edge rules attach these headers; running this on Vercel
+// would cause duplicate merged headers (e.g. 'nosniff, nosniff' and duplicate HSTS).
+if (!process.env.VERCEL) {
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), browsing-topics=()");
+    res.setHeader("X-XSS-Protection", "0");
+    next();
+  });
+}
+
 // Increase payload limit for Base64 image uploads
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -399,10 +417,11 @@ const computeSimilarity = (p1: any, p2: any): number => {
 // ==========================================
 
 app.post("/api/admin/login", async (req, res) => {
-  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
-  const ipStr = Array.isArray(ip) ? ip[0] : ip;
+  // Extract real client IP through reverse proxies / Vercel Edge
+  const rawIp = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.ip || req.socket.remoteAddress || "unknown";
+  const ipStr = (Array.isArray(rawIp) ? rawIp[0] : String(rawIp)).split(",")[0].trim();
 
-  // Rate limiter check
+  // Rate limiter check (5 attempts max, 60s cooldown)
   const attempts = loginAttempts.get(ipStr);
   if (attempts && attempts.lockUntil && attempts.lockUntil > Date.now()) {
     const remainingTime = Math.ceil((attempts.lockUntil - Date.now()) / 1000);
@@ -410,13 +429,21 @@ app.post("/api/admin/login", async (req, res) => {
   }
 
   const { password } = req.body;
-  if (!password) {
+  if (!password || typeof password !== "string") {
     return res.status(400).json({ error: "Password is required" });
   }
 
   const securePassword = process.env.ADMIN_PASSWORD;
+  if (!securePassword) {
+    return res.status(500).json({ error: "Server authentication error" });
+  }
 
-  if (password === securePassword) {
+  // Constant-time password check using fixed-length SHA-256 digests (mitigates timing side-channel attacks)
+  const userPassHash = crypto.createHash("sha256").update(password).digest();
+  const securePassHash = crypto.createHash("sha256").update(securePassword).digest();
+  const isMatch = crypto.timingSafeEqual(userPassHash, securePassHash);
+
+  if (isMatch) {
     // Reset rate limiter on success
     loginAttempts.delete(ipStr);
 
@@ -425,9 +452,9 @@ app.post("/api/admin/login", async (req, res) => {
     const csrfToken = crypto.randomBytes(32).toString("hex");
     await sessionStore.create(sessionId, csrfToken);
 
-    const isProd = process.env.NODE_ENV === "production";
+    const isSecure = process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || req.secure || req.headers["x-forwarded-proto"] === "https";
     let cookieStr = `admin_session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
-    if (isProd) {
+    if (isSecure) {
       cookieStr += "; Secure";
     }
     res.setHeader("Set-Cookie", cookieStr);
@@ -452,8 +479,9 @@ app.post("/api/admin/logout", async (req, res) => {
   if (sessionId) {
     await sessionStore.delete(sessionId);
   }
+  const isSecure = process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || req.secure || req.headers["x-forwarded-proto"] === "https";
   // Clear cookie
-  res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+  res.setHeader("Set-Cookie", `admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${isSecure ? "; Secure" : ""}`);
   res.json({ success: true });
 });
 
